@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visitendokumentation Allgemeinchirurgie</title>
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --panel-2:#eef2f6; --line:#d6dee7;
+  --txt:#16202b; --txt-dim:#5d6b7a;
+  --acc:#0b6bcb; --acc-soft:#e3f0ff; --acc-line:#8dc0f2;
+  --ok:#0f7b52; --warn:#a8580a;
+  --radius:11px;
+  --tap:46px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#10151b; --panel:#18202a; --panel-2:#1f2937; --line:#2f3d4d;
+    --txt:#e6edf4; --txt-dim:#94a5b8;
+    --acc:#4d9bf0; --acc-soft:#12324f; --acc-line:#2f6fae;
+    --ok:#3fbf8f; --warn:#e0a04a;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--txt);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  display:flex; flex-direction:column; height:100dvh; overflow:hidden;
+  -webkit-text-size-adjust:100%;
+}
+button,input,select,textarea{font:inherit; color:inherit}
+
+/* ---------- Kopfzeile ---------- */
+header{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding-top:calc(8px + env(safe-area-inset-top));
+}
+header h1{font-size:16px; margin:0; font-weight:700; letter-spacing:-.01em; white-space:nowrap}
+header .sp{flex:1}
+#datum{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+  padding:8px 10px; min-height:38px;
+}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.segb{
+  min-width:44px; min-height:38px; border:0; border-right:1px solid var(--line);
+  background:var(--panel-2); cursor:pointer; font-weight:800; letter-spacing:.02em;
+}
+.segb:last-child{border-right:0}
+.segb.on{background:var(--acc); color:#fff}
+.btn{
+  border:1px solid var(--line); background:var(--panel-2); border-radius:8px;
+  padding:8px 12px; min-height:38px; cursor:pointer; white-space:nowrap;
+}
+.btn:hover{border-color:var(--acc-line)}
+.btn:active{transform:translateY(1px)}
+
+/* ---------- Reiter ---------- */
+nav{
+  display:flex; gap:6px; padding:8px 12px; background:var(--bg);
+  border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none;
+}
+nav::-webkit-scrollbar{display:none}
+.tab{
+  flex:1 0 auto; min-width:96px; min-height:var(--tap);
+  border:1px solid var(--line); background:var(--panel); border-radius:var(--radius);
+  cursor:pointer; padding:6px 12px; display:flex; align-items:center; justify-content:center; gap:7px;
+  font-weight:600; color:var(--txt-dim);
+}
+.tab .k{font-size:17px; font-weight:800; color:var(--acc)}
+.tab[aria-selected="true"]{background:var(--acc-soft); border-color:var(--acc-line); color:var(--txt)}
+.tab .n{
+  min-width:21px; height:21px; padding:0 6px; border-radius:11px; background:var(--acc); color:#fff;
+  font-size:12px; font-weight:700; display:none; align-items:center; justify-content:center;
+}
+.tab .n.on{display:inline-flex}
+
+/* ---------- Inhalt ---------- */
+main{flex:1; overflow-y:auto; padding:12px 12px 18px; -webkit-overflow-scrolling:touch}
+.grp{margin-bottom:16px}
+.grp > h2{
+  font-size:12px; text-transform:uppercase; letter-spacing:.09em; color:var(--txt-dim);
+  margin:0 0 7px 2px; font-weight:700;
+}
+.chips{display:flex; flex-wrap:wrap; gap:7px}
+.chip{
+  display:inline-flex; align-items:center; flex-wrap:wrap; gap:6px;
+  min-height:var(--tap); padding:7px 14px;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:background .1s, border-color .1s;
+}
+.chip:hover{border-color:var(--acc-line)}
+.chip.on{background:var(--acc-soft); border-color:var(--acc); box-shadow:inset 0 0 0 1px var(--acc)}
+.chip.on .lbl{font-weight:600}
+.chip:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+.chip .f{
+  background:var(--panel); border:1px solid var(--acc-line); border-radius:7px;
+  padding:5px 7px; min-height:32px; width:62px; text-align:center;
+}
+.chip .f.w{width:158px; text-align:left}
+.chip .f.s{width:112px; text-align:left}
+.chip .f:focus{outline:2px solid var(--acc); outline-offset:0}
+.chip .f[type=number]{-moz-appearance:textfield}
+.chip .f[type=number]::-webkit-outer-spin-button,
+.chip .f[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.chip .cnt{font-size:12px; font-weight:800; color:var(--acc)}
+
+/* Pill-Auswahl innerhalb eines Bausteins bzw. Instanz-Block im Fremdmaterial */
+.prow,.inst{
+  flex-basis:100%; display:flex; flex-wrap:wrap; gap:5px; align-items:center;
+  border-top:1px dashed var(--acc-line); padding-top:7px; margin-top:2px;
+}
+.inst{flex-wrap:nowrap; flex-direction:column; align-items:stretch}
+.irow{display:flex; flex-wrap:wrap; gap:5px; align-items:center}
+.ihd{font-size:12px; color:var(--txt-dim); margin-right:2px; min-width:78px}
+.pill{
+  border:1px solid var(--line); background:var(--panel); border-radius:20px;
+  padding:5px 11px; min-height:32px; font-size:13px; cursor:pointer;
+  display:inline-flex; align-items:center; user-select:none;
+}
+.pill:hover{border-color:var(--acc-line)}
+.pill.on{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
+.pill.add{border-style:dashed; border-color:var(--acc-line); color:var(--acc); font-weight:600; flex-basis:100%; justify-content:center; margin-top:2px}
+.pill.del{color:var(--warn); font-weight:800; padding:5px 12px}
+
+.free{
+  width:100%; margin-top:4px; min-height:64px; resize:vertical;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px;
+}
+.free:focus{outline:2px solid var(--acc); outline-offset:-1px; border-color:var(--acc)}
+
+/* ---------- Vorschau ---------- */
+footer{
+  background:var(--panel); border-top:1px solid var(--line);
+  display:flex; flex-direction:column; flex:0 0 auto;
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -3px 14px rgba(0,0,0,.09);
+}
+.fbar{display:flex; align-items:center; gap:8px; padding:8px 12px 6px; flex-wrap:wrap}
+.fbar .ttl{font-size:12px; text-transform:uppercase; letter-spacing:.09em; color:var(--txt-dim); font-weight:700}
+.fbar .sp{flex:1}
+.fbar .note{font-size:12px; color:var(--txt-dim); font-style:italic}
+.fbar .warn{font-size:12px; color:var(--warn); font-weight:600}
+#copy{
+  background:var(--acc); border-color:var(--acc); color:#fff; font-weight:700;
+  min-height:var(--tap); padding:0 20px; font-size:15px;
+}
+#copy.done{background:var(--ok); border-color:var(--ok)}
+#out{
+  margin:0 12px 12px; padding:11px 13px; overflow:auto;
+  height:190px; min-height:70px; max-height:46vh; resize:vertical;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius);
+  font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; white-space:pre-wrap;
+}
+#out:focus{outline:2px solid var(--acc); outline-offset:-1px}
+#out.edit{background:var(--panel); border-color:var(--warn)}
+#stage{position:fixed; left:-9999px; top:0; opacity:0; white-space:pre-wrap}
+
+@media (max-width:560px){
+  header h1{font-size:14px}
+  #out{height:150px}
+  .tab{min-width:72px; font-size:13px}
+  .ihd{min-width:100%}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Chirurgische Visite</h1>
+  <input type="date" id="datum">
+  <span class="seg" id="geschlecht" title="Anrede im Text">
+    <button class="segb on" data-g="Patient">M</button>
+    <button class="segb" data-g="Patientin">W</button>
+  </span>
+  <span class="sp"></span>
+  <button class="btn" id="modus" title="Ausgabeformat umschalten">Fließtext</button>
+  <button class="btn" id="reset">Zurücksetzen</button>
+  <button class="btn" id="save" title="Diese Seite als HTML-Datei für die Nutzung ohne Internet speichern">⤓ Offline-Kopie</button>
+</header>
+
+<nav id="tabs"></nav>
+<main id="main"></main>
+
+<footer>
+  <div class="fbar">
+    <span class="ttl">Vorschau</span>
+    <span class="note" id="hint">– noch keine Bausteine ausgewählt –</span>
+    <span class="warn" id="edited" hidden>manuell bearbeitet · Klicks werden nicht mehr übernommen</span>
+    <span class="sp"></span>
+    <button class="btn" id="resync" hidden>↻ Neu aufbauen</button>
+    <button class="btn" id="copy">In Zwischenablage</button>
+  </div>
+  <div id="out" contenteditable="true"></div>
+</footer>
+<div id="stage" contenteditable="true"></div>
+
+<script>
+"use strict";
+
+/* Unveränderte Kopie dieser Seite für den Offline-Download (vor dem ersten Rendern) */
+const SELF = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+/* =======================================================================
+   AUSWAHLLISTEN (für Dropdown-Felder mit Freitext-Möglichkeit)
+   ======================================================================= */
+const DRAINTYP = ["Redon-Drainage","Blake-Drainage","Easy-Flow-Drainage","Robinson-Drainage",
+  "Zieldrainage","Lasche","Thoraxdrainage","T-Drainage","Magensonde","VAC-System","Spül-VAC"];
+const SPUELL  = ["NaCl 0,9 %","Lavasept","Prontosan","Octenilin","Ringer-Lösung"];
+const SONO    = ["des Abdomens","der Leiste rechts","der Leiste links","des Wundgebietes","der Bauchdecke",
+  "zum Hämatomausschluss","zur Seromkontrolle","zum Abszessausschluss","zur Verlaufskontrolle",
+  "der Nieren und ableitenden Harnwege","der Gallenblase und Gallenwege","der Beinvenen zum TVT-Ausschluss",
+  "der Pleura","zur Restharnbestimmung","der Halsweichteile"];
+const SEITE   = ["rechts","links","beidseits"];
+const SEKRET  = ["serös","serosanguinös","blutig","altblutig","gallig","trüb","putride","chylös","enteral"];
+const STUHL   = ["geformt","breiig","dünnflüssig","flüssig","wässrig","blutig","teerfarben","Windabgang"];
+const DSLOK   = ["im rechten Oberbauch","im linken Oberbauch","im rechten Unterbauch","im linken Unterbauch",
+  "im Mittelbauch","epigastrisch","periumbilikal","suprapubisch","in der rechten Flanke","in der linken Flanke",
+  "im Wundgebiet","über dem gesamten Abdomen","im McBurney-Punkt","im Nierenlager rechts","im Nierenlager links"];
+
+/* =======================================================================
+   BAUSTEIN-KATALOG
+   Text ohne Satzzeichen am Ende. {feld} = Eingabefeld, {P} = Patient/Patientin.
+   excl:'name' → Bausteine dieser Gruppe schließen sich gegenseitig aus.
+   fields: [{k:'schlüssel', t:'num'|'txt'|'list'|'pills', ph:'Platzhalter',
+             opts:[...] (bei list/pills), dv:'Vorgabewert', opt:1 (darf leer bleiben),
+             w:1 (breit) / s:1 (mittel)}]
+   ======================================================================= */
+const CATALOG = {
+  S:{key:"S", name:"Subjektiv", groups:[
+    {t:"Allgemeinbefinden", items:[
+      {x:"bef", l:"Fühlt sich wohl", o:"{P} fühlt sich wohl"},
+      {x:"bef", l:"Subjektiv gebessert", o:"Subjektiv deutlich gebessert"},
+      {x:"bef", l:"Unverändert", o:"Befinden unverändert zum Vortag"},
+      {x:"bef", l:"Reduziertes AZ", o:"Reduziertes Allgemeinbefinden"},
+      {x:"bef", l:"Abgeschlagen", o:"{P} klagt über Abgeschlagenheit und Müdigkeit"},
+      {x:"ang", l:"Liegend angetroffen", o:"{P} wird liegend im Bett angetroffen"},
+      {x:"ang", l:"Sitzend angetroffen", o:"{P} wird sitzend im Bett angetroffen"},
+      {x:"ang", l:"Im Sessel angetroffen", o:"{P} wird sitzend im Sessel angetroffen"},
+      {x:"ang", l:"Stehend angetroffen", o:"{P} wird stehend am Bett angetroffen"},
+      {x:"nacht", l:"Nachtruhe erholsam", o:"Nachtruhe erholsam"},
+      {x:"nacht", l:"Unruhige Nacht", o:"Unruhige Nacht"}
+    ]},
+    {t:"Schmerzen", items:[
+      {x:"schm", l:"Schmerzfrei", o:"Schmerzfrei"},
+      {x:"schm", l:"Wundschmerz NRS", o:"Wundschmerz NRS {n}/10", fields:[{k:"n",t:"num",ph:"0"}]},
+      {x:"schm", l:"Schmerzen NRS in Ruhe / Bewegung", o:"Schmerzen NRS {r}/10 in Ruhe, {b}/10 bei Bewegung", fields:[{k:"r",t:"num",ph:"Ruhe"},{k:"b",t:"num",ph:"Bew."}]},
+      {x:"schm", l:"Schmerzexazerbation", o:"Schmerzexazerbation im OP-Gebiet"},
+      {l:"Analgesie ausreichend", o:"Schmerzen unter aktueller Analgesie gut kontrolliert"},
+      {l:"Bedarfsmedikation benötigt", o:"Bedarfsanalgesie {n}x in den letzten 24 h benötigt", fields:[{k:"n",t:"num",ph:"x"}]}
+    ]},
+    {t:"Verdauung / Stuhlgang / Stoma", items:[
+      {x:"stg", l:"Stuhlgang regelrecht", o:"Stuhlgang regelrecht"},
+      {x:"stg", l:"Kein Stuhlgang seit", o:"Kein Stuhlgang seit {n} Tagen", fields:[{k:"n",t:"num",ph:"Tg"}]},
+      {x:"stg", l:"Diarrhoe", o:"Diarrhoe, {n}x in 24 h", fields:[{k:"n",t:"num",ph:"x"}]},
+      {x:"stg", l:"Stoma fördert regelrecht", o:"Stoma fördert regelrecht {q}", fields:[{k:"q",t:"list",opts:STUHL,ph:"Konsistenz",opt:1,s:1}]},
+      {x:"stg", l:"Stoma fördert", o:"Stoma fördert {n} ml/24 h, {q}",
+       fields:[{k:"n",t:"num",ph:"ml"},{k:"q",t:"list",opts:STUHL,ph:"Konsistenz",opt:1,s:1}]},
+      {x:"stg", l:"Stoma fördert vermehrt", o:"Stoma fördert vermehrt, {n} ml/24 h, {q}",
+       fields:[{k:"n",t:"num",ph:"ml"},{k:"q",t:"list",opts:STUHL,ph:"Konsistenz",opt:1,s:1}]},
+      {x:"stg", l:"Stoma fördert nicht", o:"Stoma fördert bisher nicht"},
+      {x:"wind", l:"Windabgang vorhanden", o:"Windabgang vorhanden"},
+      {x:"wind", l:"Kein Windabgang", o:"Bisher kein Windabgang"},
+      {x:"uebl", l:"Keine Übelkeit / kein Erbrechen", o:"Keine Übelkeit, kein Erbrechen"},
+      {x:"uebl", l:"Übelkeit", o:"Übelkeit"},
+      {x:"uebl", l:"Erbrechen", o:"Erbrechen, {n}x in 24 h", fields:[{k:"n",t:"num",ph:"x"}]}
+    ]},
+    {t:"Kostaufbau", items:[
+      {x:"kost", l:"Kost wird gut vertragen", o:"Kost wird gut vertragen"},
+      {x:"kost", l:"Kostaufbau problemlos", o:"Kostaufbau verläuft problemlos"},
+      {x:"kost", l:"Trinken wird vertragen", o:"Trinken wird vertragen"},
+      {x:"kost", l:"Kost wird nicht vertragen", o:"Kost wird nicht vertragen"},
+      {l:"Appetit reduziert", o:"Appetit reduziert"},
+      {l:"Nüchtern", o:"Aktuell nüchtern"}
+    ]},
+    {t:"Miktion", items:[
+      {x:"mikt", l:"Miktion spontan & regelrecht", o:"Miktion spontan und regelrecht"},
+      {x:"mikt", l:"Miktionsbeschwerden", o:"Miktionsbeschwerden"},
+      {x:"mikt", l:"Über DK abgeleitet", o:"Harnableitung über Blasenkatheter"}
+    ]},
+    {t:"Mobilisation / Atmung", items:[
+      {x:"mob", l:"Selbstständig mobil", o:"Selbstständig auf Station mobil"},
+      {x:"mob", l:"Mobilisation auf Station", o:"Mobilisation auf Station mit Unterstützung"},
+      {x:"mob", l:"Mobilisation an Bettkante", o:"Mobilisation bis an die Bettkante"},
+      {x:"mob", l:"Bettlägerig", o:"Aktuell bettlägerig"},
+      {x:"atr", l:"Atemtrainer wird genutzt", o:"Atemtrainer wird regelmäßig genutzt"},
+      {x:"atr", l:"Atemtrainer wird nicht genutzt", o:"Atemtrainer wird nicht genutzt"},
+      {x:"luft", l:"Keine Luftnot", o:"Keine Luftnot"},
+      {x:"luft", l:"Luftnot", o:"Luftnot bei Belastung"},
+      {l:"Produktiver Husten", o:"Produktiver Husten"}
+    ]}
+  ]},
+
+  O:{key:"O", name:"Objektiv", groups:[
+    {t:"Allgemein / Vitalwerte", items:[
+      {l:"Wach, orientiert, kardiopulmonal stabil", o:"Wach, allseits orientiert, kardiopulmonal stabil"},
+      {x:"temp", l:"Afebril", o:"Afebril"},
+      {x:"temp", l:"Subfebril", o:"Subfebril, Temperatur {n} °C", fields:[{k:"n",t:"txt",ph:"37,8"}]},
+      {x:"temp", l:"Fieber", o:"Febril bis {n} °C", fields:[{k:"n",t:"txt",ph:"38,9"}]},
+      {l:"RR / HF", o:"RR {rr} mmHg, HF {hf}/min", fields:[{k:"rr",t:"txt",ph:"120/75"},{k:"hf",t:"num",ph:"78"}]},
+      {l:"SpO₂", o:"SpO₂ {n} % {z}", fields:[{k:"n",t:"num",ph:"98"},{k:"z",t:"list",opts:["unter Raumluft","unter 2 l O₂/min","unter 4 l O₂/min"],ph:"unter RL",opt:1,w:1}]},
+      {l:"Kreislaufstabil ohne Katecholamine", o:"Kreislaufstabil ohne Katecholaminbedarf"},
+      {l:"Somnolent", o:"Somnolent, erweckbar"}
+    ]},
+    {t:"Abdomen", items:[
+      {x:"abd", l:"Abdomen weich", o:"Abdomen weich"},
+      {x:"abd", l:"Abdomen weich, adipös", o:"Abdomen adipös, weich"},
+      {x:"abd", l:"Abdomen gebläht / meteoristisch", o:"Abdomen gebläht und meteoristisch"},
+      {x:"abd", l:"Abdomen gespannt", o:"Abdomen gespannt"},
+      {x:"ds", l:"Kein Druckschmerz", o:"Kein Druckschmerz"},
+      {x:"ds", l:"Druckschmerz im OP-Gebiet", o:"Druckschmerz im OP-Gebiet"},
+      {x:"ds", l:"Lokaler Druckschmerz", o:"Lokaler Druckschmerz {z} {f}",
+       fields:[{k:"f",t:"txt",ph:"Ergänzung",opt:1,w:1},{k:"z",t:"pills",opts:DSLOK,opt:1}]},
+      {x:"per", l:"Kein Peritonismus", o:"Kein Peritonismus, keine Abwehrspannung"},
+      {x:"per", l:"Abwehrspannung", o:"Abwehrspannung"},
+      {x:"dg", l:"Darmgeräusche regelrecht (4 Quadranten)", o:"Darmgeräusche über allen vier Quadranten regelrecht"},
+      {x:"dg", l:"Spärliche Darmgeräusche", o:"Spärliche Darmgeräusche"},
+      {x:"dg", l:"Keine Darmgeräusche", o:"Keine Darmgeräusche auskultierbar"},
+      {l:"Bruchpforten frei", o:"Bruchpforten frei"},
+      {l:"Beide Hoden im Skrotum", o:"Beide Hoden regelrecht im Skrotum tastbar"},
+      {l:"Rektal digital", o:"Digital-rektale Untersuchung: {z}", fields:[{k:"z",t:"txt",ph:"ohne Befund",w:1}]}
+    ]},
+    {t:"Wundverhältnisse", items:[
+      {x:"wund", l:"Reizlos, trocken", o:"Wundverhältnisse reizlos und trocken"},
+      {x:"wund", l:"Leichte Rötung der Wundränder", o:"Diskrete Rötung der Wundränder ohne Sekretion"},
+      {x:"wund", l:"Wundinfekt", o:"Gerötete, überwärmte Wunde mit putrider Sekretion"},
+      {x:"wund", l:"Wunddehiszenz", o:"Wunddehiszenz auf {n} cm Länge", fields:[{k:"n",t:"num",ph:"cm"}]},
+      {l:"Keine Rötung / Schwellung", o:"Keine Rötung, keine Schwellung"},
+      {x:"pfl", l:"Verband trocken", o:"Verband trocken und sauber"},
+      {x:"pfl", l:"Pflaster altblutig durchgeschlagen", o:"Pflaster altblutig durchgeschlagen"},
+      {x:"pfl", l:"Pflaster frisch durchgeblutet", o:"Pflaster frisch blutig durchgeschlagen"},
+      {x:"pfl", l:"Pflaster serös durchgeschlagen", o:"Pflaster serös durchgeschlagen"},
+      {l:"Serom", o:"Tastbares Serom im Wundbereich"},
+      {l:"Hämatom", o:"Hämatom im Wundbereich"},
+      {l:"Sezernierende Wunde", o:"Wunde sezerniert {z}", fields:[{k:"z",t:"list",opts:SEKRET,ph:"serös",w:1}]},
+      {l:"Klammern / Nähte in situ", o:"Klammern bzw. Hautnähte reizlos in situ"},
+      {l:"VAC intakt, Sog", o:"VAC-Verband intakt, Sog {n} mmHg", fields:[{k:"n",t:"num",ph:"125",dv:"125"}]},
+      {l:"Spül-VAC intakt", o:"Spül-VAC intakt, Sog {n} mmHg, Instillation mit {z}",
+       fields:[{k:"n",t:"num",ph:"125",dv:"125"},{k:"z",t:"list",opts:SPUELL,ph:"Lösung",dv:"NaCl 0,9 %",opt:1,w:1}]},
+      {l:"Spül-VAC Instillation regelrecht", o:"Instillation und Ableitung über den Spül-VAC regelrecht"},
+      {l:"VAC-Schwamm mit Granulation", o:"Wundgrund gut granuliert unter der VAC-Therapie"}
+    ]},
+    {t:"Drainagen / Ableitungen", items:[
+      {l:"Drainage Fördermenge", o:"{d} {loc} fördert {n} ml/24 h, {q}",
+       fields:[{k:"d",t:"list",opts:DRAINTYP,ph:"Drainage",w:1},
+               {k:"loc",t:"list",opts:SEITE,ph:"Lok.",opt:1,s:1},
+               {k:"n",t:"num",ph:"ml"},
+               {k:"q",t:"list",opts:SEKRET,ph:"Sekret",opt:1,s:1}]},
+      {l:"Drainage fördert nicht", o:"{d} {loc} fördert kein Sekret mehr",
+       fields:[{k:"d",t:"list",opts:DRAINTYP,ph:"Drainage",w:1},
+               {k:"loc",t:"list",opts:SEITE,ph:"Lok.",opt:1,s:1}]},
+      {l:"Drainage fördert vermehrt", o:"{d} {loc} fördert vermehrt, {n} ml/24 h, {q}",
+       fields:[{k:"d",t:"list",opts:DRAINTYP,ph:"Drainage",w:1},
+               {k:"loc",t:"list",opts:SEITE,ph:"Lok.",opt:1,s:1},
+               {k:"n",t:"num",ph:"ml"},
+               {k:"q",t:"list",opts:SEKRET,ph:"Sekret",opt:1,s:1}]},
+      {l:"Magensonde Rückläufe", o:"Über die Magensonde {n} ml Rücklauf/24 h", fields:[{k:"n",t:"num",ph:"ml"}]},
+      {l:"Urinausscheidung", o:"Urinausscheidung {n} ml/24 h", fields:[{k:"n",t:"num",ph:"ml"}]},
+      {l:"Bilanz", o:"Bilanz {n} ml", fields:[{k:"n",t:"txt",ph:"+500"}]},
+      {l:"Stoma fördert regelrecht", o:"Stoma gut durchblutet, fördert regelrecht"}
+    ]},
+    {t:"Herz / Lunge / Extremitäten", items:[
+      {l:"Herztöne rein, rhythmisch", o:"Herztöne rein und rhythmisch"},
+      {l:"Vesikuläres AG bds.", o:"Vesikuläres Atemgeräusch beidseits, keine Nebengeräusche"},
+      {l:"Abgeschwächtes AG basal", o:"Basal abgeschwächtes Atemgeräusch {z}", fields:[{k:"z",t:"list",opts:SEITE,ph:"beidseits",dv:"beidseits",s:1}]},
+      {l:"Rasselgeräusche", o:"Feuchte Rasselgeräusche"},
+      {x:"oed", l:"Keine Beinödeme", o:"Keine Beinödeme"},
+      {x:"oed", l:"Beinödeme vorhanden", o:"Beinödeme {z} vorhanden", fields:[{k:"z",t:"list",opts:["beidseits","rechts","links","prätibial beidseits"],ph:"bds.",dv:"beidseits",w:1}]},
+      {l:"Keine TVT-Zeichen", o:"Keine klinischen Zeichen einer tiefen Beinvenenthrombose"},
+      {l:"pDMS intakt", o:"Periphere Durchblutung, Motorik und Sensibilität intakt"}
+    ]},
+    {t:"Labor", items:[
+      {x:"lab", l:"Entzündungsparameter rückläufig", o:"Entzündungsparameter rückläufig"},
+      {x:"lab", l:"Entzündungsparameter ansteigend", o:"Entzündungsparameter ansteigend"},
+      {x:"lab", l:"Labor unauffällig", o:"Laborchemisch unauffälliger Verlauf"},
+      {l:"CRP", o:"CRP {n} mg/l", fields:[{k:"n",t:"txt",ph:"42"}]},
+      {l:"Leukozyten", o:"Leukozyten {n}/nl", fields:[{k:"n",t:"txt",ph:"9,4"}]},
+      {l:"Hb", o:"Hb {n} g/dl", fields:[{k:"n",t:"txt",ph:"11,2"}]},
+      {l:"Kreatinin", o:"Kreatinin {n} mg/dl", fields:[{k:"n",t:"txt",ph:"0,9"}]},
+      {l:"Lipase", o:"Lipase {n} U/l", fields:[{k:"n",t:"txt",ph:"60"}]}
+    ]}
+  ]},
+
+  A:{key:"A", name:"Assessment", groups:[
+    {t:"Verlauf", items:[
+      {x:"verl", l:"Regelrechter postoperativer Verlauf", o:"Regelrechter postoperativer Verlauf, {n}. postoperativer Tag", fields:[{k:"n",t:"num",ph:"POD"}]},
+      {x:"verl", l:"Protrahierter Verlauf", o:"Protrahierter postoperativer Verlauf, {n}. postoperativer Tag", fields:[{k:"n",t:"num",ph:"POD"}]},
+      {x:"verl", l:"Regelrechter konservativer Verlauf", o:"Regelrechter Verlauf unter konservativer Therapie"},
+      {x:"verl", l:"Stabile Situation", o:"Klinisch und laborchemisch stabile Situation"},
+      {x:"verl", l:"Befundverschlechterung", o:"Klinische Befundverschlechterung"},
+      {l:"Auf Behandlungspfad", o:"Verlauf entsprechend dem Behandlungspfad"},
+      {l:"Abweichung vom Behandlungspfad", o:"Abweichung vom Behandlungspfad"},
+      {l:"Fast-Track-Konzept", o:"Verlauf im Rahmen des Fast-Track-Konzeptes"},
+      {l:"Z.n. Operation", o:"Z.n. {z} am {d}", fields:[{k:"z",t:"txt",ph:"Eingriff",w:1},{k:"d",t:"txt",ph:"Datum",s:1}]},
+      {l:"Tag stationär", o:"{n}. Tag des stationären Aufenthaltes", fields:[{k:"n",t:"num",ph:"Tg"}]},
+      {l:"Keine Komplikationszeichen", o:"Kein Anhalt für postoperative Komplikationen"},
+      {l:"Kein Infektfokus", o:"Afebril, kein Anhalt für einen Infektfokus"},
+      {l:"Präoperativ", o:"Präoperativ, OP geplant für {z}", fields:[{k:"z",t:"txt",ph:"morgen",w:1}]}
+    ]},
+    {t:"Wundheilung / Lokalbefund", items:[
+      {x:"whl", l:"Primäre Wundheilung", o:"Primär heilende Wundverhältnisse"},
+      {x:"whl", l:"Sekundäre Wundheilung", o:"Sekundär heilende Wunde"},
+      {x:"whl", l:"Wundheilung abgeschlossen", o:"Wundheilung abgeschlossen"},
+      {l:"Wundkonditionierung unter VAC", o:"Wundkonditionierung unter VAC-Therapie, Wundgrund zunehmend granuliert"},
+      {l:"Infektsanierung unter Spül-VAC", o:"Fortschreitende Infektsanierung unter Spül-VAC-Therapie"},
+      {l:"Postoperatives Serom", o:"Postoperatives Serom"},
+      {l:"Wundhämatom", o:"Postoperatives Wundhämatom"},
+      {l:"Fasziendehiszenz", o:"Fasziendehiszenz"},
+      {l:"Platzbauch", o:"Platzbauch"},
+      {l:"Narbenhernie", o:"Narbenhernie"}
+    ]},
+    {t:"Problem / Verdacht", items:[
+      {l:"Verzögerter Kostaufbau", o:"Verzögerter Kostaufbau"},
+      {l:"Postoperative Darmatonie", o:"Postoperative Darmatonie"},
+      {l:"V.a. paralytischen Ileus", o:"V.a. paralytischen Ileus"},
+      {l:"V.a. Wundinfekt", o:"V.a. Wundinfektion"},
+      {l:"V.a. Wundheilungsstörung", o:"Beginnende Wundheilungsstörung"},
+      {l:"V.a. intraabdominellen Abszess", o:"V.a. intraabdominellen Abszess"},
+      {l:"V.a. Anastomoseninsuffizienz", o:"V.a. Anastomoseninsuffizienz"},
+      {l:"V.a. Harnwegsinfekt", o:"V.a. Harnwegsinfekt"},
+      {l:"V.a. Pneumonie", o:"V.a. postoperative Pneumonie"},
+      {l:"V.a. Nahtinsuffizienz", o:"V.a. Nahtinsuffizienz"},
+      {l:"V.a. Gallenleck", o:"V.a. Gallenleck"},
+      {l:"V.a. Pankreasfistel", o:"V.a. postoperative Pankreasfistel"},
+      {l:"V.a. Lymphfistel", o:"V.a. Lymphfistel"},
+      {l:"V.a. Katheterinfektion", o:"V.a. katheterassoziierte Infektion"},
+      {l:"Gesicherter Wundinfekt", o:"Gesicherte Wundinfektion"},
+      {l:"Sepsis", o:"Sepsis bei {z}", fields:[{k:"z",t:"txt",ph:"Fokus",w:1}]},
+      {l:"Nachblutung", o:"V.a. postoperative Nachblutung"},
+      {l:"Postoperative Anämie", o:"Postoperative Anämie"},
+      {l:"Delir", o:"Postoperatives Delir"},
+      {l:"PONV", o:"Postoperative Übelkeit und Erbrechen (PONV)"},
+      {l:"Elektrolytentgleisung", o:"Elektrolytentgleisung"},
+      {l:"Akute Niereninsuffizienz", o:"Akute Niereninsuffizienz"},
+      {l:"Hypervolämie", o:"Hypervolämie"},
+      {l:"Vorhofflimmern", o:"Tachykardes Vorhofflimmern"},
+      {l:"Hypertensive Entgleisung", o:"Hypertensive Entgleisung"},
+      {l:"Malnutrition", o:"Malnutrition, erhöhtes Risiko für Wundheilungsstörungen"},
+      {l:"Verzögerte Mobilisation", o:"Verzögerte Mobilisation"},
+      {l:"Unzureichende Analgesie", o:"Aktuell unzureichende Schmerzkontrolle"}
+    ]},
+    {t:"Therapieziel", items:[
+      {l:"Antibiotische Therapie wirksam", o:"Antibiotische Therapie zeigt Wirkung"},
+      {l:"Deeskalation der Antibiose möglich", o:"Deeskalation der antibiotischen Therapie möglich"},
+      {x:"vorg", l:"Konservatives Vorgehen", o:"Fortführung des konservativen Vorgehens"},
+      {x:"vorg", l:"OP-Indikation gestellt", o:"OP-Indikation gestellt"},
+      {x:"vorg", l:"Abwartendes Vorgehen", o:"Zunächst abwartendes Vorgehen unter engmaschiger Kontrolle"},
+      {l:"Drainage kann entfernt werden", o:"Drainage kann entfernt werden"},
+      {l:"Kostaufbau steigerbar", o:"Kostaufbau kann gesteigert werden"},
+      {l:"Entlassfähig", o:"{P} ist entlassfähig"},
+      {l:"Noch nicht entlassfähig", o:"{P} ist aktuell noch nicht entlassfähig"},
+      {l:"Verlegung auf Normalstation möglich", o:"Verlegung auf Normalstation möglich"},
+      {l:"Intensivpflichtig", o:"Intensivmedizinische Überwachung weiterhin erforderlich"},
+      {l:"Weiterbehandlung interdisziplinär", o:"Weiterbehandlung interdisziplinär erforderlich ({z})", fields:[{k:"z",t:"txt",ph:"Fachrichtung",w:1}]},
+      {l:"Palliative Situation", o:"Palliative Behandlungssituation"},
+      {l:"Best Supportive Care", o:"Best-Supportive-Care-Konzept"},
+      {l:"Anschlussversorgung erforderlich", o:"Anschlussversorgung erforderlich"}
+    ]}
+  ]},
+
+  P:{key:"P", name:"Procedere", groups:[
+    {t:"Wunde / Drainagen", items:[
+      {l:"Verbandswechsel heute", o:"Verbandswechsel heute"},
+      {l:"Verbandswechsel morgen", o:"Verbandswechsel morgen"},
+      {l:"Verbandswechsel täglich", o:"Täglicher Verbandswechsel"},
+      {l:"VAC-Wechsel", o:"VAC-Wechsel am {z}", fields:[{k:"z",t:"txt",ph:"Datum/Tag",w:1}]},
+      {l:"Wundvisite anmelden", o:"Wundvisite anmelden"},
+      {l:"Fadenzug / Klammerentfernung", o:"Fadenzug bzw. Klammerentfernung am {n}. postoperativen Tag", fields:[{k:"n",t:"num",ph:"POD"}]},
+      {l:"Drainage kürzen", o:"{d} {loc} um {n} cm kürzen",
+       fields:[{k:"d",t:"list",opts:DRAINTYP,ph:"Drainage",w:1},{k:"loc",t:"list",opts:SEITE,ph:"Lok.",opt:1,s:1},{k:"n",t:"num",ph:"cm"}]},
+      {l:"Drainage ziehen", o:"{d} {loc} entfernen",
+       fields:[{k:"d",t:"list",opts:DRAINTYP,ph:"Drainage",w:1},{k:"loc",t:"list",opts:SEITE,ph:"Lok.",opt:1,s:1}]},
+      {l:"Drainage belassen", o:"{d} {loc} vorerst belassen",
+       fields:[{k:"d",t:"list",opts:DRAINTYP,ph:"Drainage",w:1},{k:"loc",t:"list",opts:SEITE,ph:"Lok.",opt:1,s:1}]},
+      {l:"VAC-Wechsel anmelden", o:"VAC-Wechsel im OP anmelden"},
+      {l:"Spül-VAC fortführen", o:"Spül-VAC-Therapie fortführen"},
+      {l:"DK entfernen", o:"Blasenkatheter entfernen, Miktionskontrolle"},
+      {l:"Magensonde entfernen", o:"Magensonde entfernen"},
+      {l:"PVK ex", o:"PVK entfernen"},
+      {l:"PVK wechseln", o:"PVK wechseln"},
+      {l:"ZVK wechseln", o:"ZVK wechseln"},
+      {l:"ZVK entfernen", o:"ZVK entfernen"}
+    ]},
+    {t:"Therapie", items:[
+      {l:"Kostaufbau fortführen", o:"Kostaufbau fortführen"},
+      {l:"Kostaufbau beginnen", o:"Kostaufbau beginnen"},
+      {l:"Vollkost", o:"Umstellung auf Vollkost"},
+      {l:"Nahrungskarenz", o:"Weiterhin Nahrungskarenz"},
+      {l:"Analgesie anpassen", o:"Analgesie anpassen"},
+      {l:"Analgesie reduzieren", o:"Analgesie schrittweise reduzieren"},
+      {l:"Antibiose fortführen", o:"Antibiotische Therapie mit {z} fortführen bis {d}", fields:[{k:"z",t:"txt",ph:"Präparat",w:1},{k:"d",t:"txt",ph:"Datum",s:1}]},
+      {l:"Antibiose auf p.o. umstellen", o:"Antibiose auf orale Gabe umstellen"},
+      {l:"Antibiose beenden", o:"Antibiotische Therapie beenden"},
+      {l:"Thromboseprophylaxe fortführen", o:"Thromboseprophylaxe fortführen"},
+      {l:"Infusionstherapie reduzieren", o:"Infusionstherapie reduzieren"},
+      {l:"Parenterale Ernährung fortführen", o:"Parenterale Ernährung fortführen"},
+      {l:"Mobilisation intensivieren", o:"Mobilisation intensivieren"},
+      {l:"Physiotherapie", o:"Physiotherapie anmelden bzw. fortführen"},
+      {l:"Atemtherapie", o:"Atemtherapie fortführen"},
+      {l:"Bilanzierung", o:"Ein- und Ausfuhrbilanzierung"},
+      {l:"EK transfundieren", o:"{n} Erythrozytenkonzentrat(e) transfundieren", fields:[{k:"n",t:"num",ph:"Anz."}]}
+    ]},
+    {t:"Diagnostik", items:[
+      {l:"Laborkontrolle morgen", o:"Laborkontrolle morgen früh"},
+      {l:"Laborkontrolle", o:"Laborkontrolle am {z}", fields:[{k:"z",t:"txt",ph:"Tag",w:1}]},
+      {l:"Sonographie", o:"Sonographie {z}", fields:[{k:"z",t:"list",opts:SONO,ph:"Region / Frage",dv:"des Abdomens",w:1}]},
+      {l:"CT-Abdomen anmelden", o:"CT-Abdomen mit Kontrastmittel anmelden"},
+      {l:"Röntgen-Thorax", o:"Röntgen-Thorax anmelden"},
+      {l:"Abstrich / Mikrobiologie", o:"Wundabstrich zur mikrobiologischen Diagnostik"},
+      {l:"Blutkulturen", o:"Blutkulturen bei Fieber abnehmen"},
+      {l:"Histologie abwarten", o:"Histologischen Befund abwarten"}
+    ]},
+    {t:"Organisation / Entlassung", items:[
+      {l:"Rücksprache Oberarzt", o:"Rücksprache mit dem Oberarzt/der Oberärztin"},
+      {l:"Kurvenvisite", o:"Entscheidung im Rahmen der Kurvenvisite"},
+      {l:"Konsil anmelden", o:"Konsil {z} anmelden", fields:[{k:"z",t:"txt",ph:"Fachrichtung",w:1}]},
+      {l:"Tumorkonferenz", o:"Vorstellung in der interdisziplinären Tumorkonferenz"},
+      {l:"Sozialdienst einschalten", o:"Sozialdienst einschalten"},
+      {l:"AHB / Reha beantragen", o:"Anschlussheilbehandlung beantragen"},
+      {l:"Häusliche Versorgung klären", o:"Häusliche Versorgung klären"},
+      {l:"Ambulante Wundbehandlung organisieren", o:"Ambulante Wundbehandlung organisieren"},
+      {l:"Pflegedienst organisieren", o:"Ambulanten Pflegedienst für die Wundversorgung organisieren"},
+      {l:"Angehörigengespräch", o:"Gespräch mit den Angehörigen"},
+      {l:"Entlassung bahnen", o:"Entlassung bahnen"},
+      {l:"Entlassung heute", o:"Entlassung heute"},
+      {l:"Entlassung morgen", o:"Entlassung morgen"},
+      {l:"Entlassung geplant für", o:"Entlassung geplant für {z}", fields:[{k:"z",t:"txt",ph:"Datum",w:1}]},
+      {l:"Entlassungsbrief vorbereiten", o:"Entlassungsbrief und Rezepte vorbereiten"},
+      {l:"Wiedervorstellung Ambulanz", o:"Wiedervorstellung in der chirurgischen Ambulanz in {n} Wochen", fields:[{k:"n",t:"num",ph:"Wo"}]},
+      {l:"Vorstellung beim Hausarzt", o:"Vorstellung beim Hausarzt zur Wundkontrolle"},
+      {l:"Verlegung", o:"Verlegung auf {z}", fields:[{k:"z",t:"txt",ph:"Station",w:1}]}
+    ]}
+  ]}
+};
+
+/* =======================================================================
+   FREMDMATERIAL – jedes Material mehrfach anlegbar (z.B. zwei PVK)
+   loc: anklickbare Lokalisationen · ind: passende Indikationen
+   ======================================================================= */
+const L_PVK  = ["Handrücken re.","Handrücken li.","Unterarm re.","Unterarm li.","Ellenbeuge re.","Ellenbeuge li.","Oberarm re.","Oberarm li.","Fußrücken re.","Fußrücken li."];
+const L_ZVK  = ["V. jugularis int. re.","V. jugularis int. li.","V. subclavia re.","V. subclavia li.","V. femoralis re.","V. femoralis li."];
+const L_PORT = ["Thorax re.","Thorax li.","Oberarm re.","Oberarm li."];
+const L_ART  = ["A. radialis re.","A. radialis li.","A. brachialis re.","A. brachialis li.","A. femoralis re.","A. femoralis li."];
+const L_ABD  = ["Oberbauch re.","Oberbauch li.","Unterbauch re.","Unterbauch li.","Mittelbauch","subhepatisch","subphrenisch re.","subphrenisch li.","Milzloge","Douglas-Raum","Wundgebiet","Leiste re.","Leiste li.","Hals","Axilla re.","Axilla li.","Mamma re.","Mamma li."];
+const L_THX  = ["Bülau re.","Bülau li.","Monaldi re.","Monaldi li.","Thorax re.","Thorax li."];
+const L_PDK  = ["thorakal","lumbal","BWK 7/8","BWK 9/10","LWK 2/3"];
+const L_STOM = ["Ileostoma re.","Ileostoma li.","Kolostoma re.","Kolostoma li.","doppelläufig re.","doppelläufig li."];
+
+const MATERIAL = [
+  {t:"Gefäßzugänge", items:[
+    {l:"PVK", o:"PVK", loc:L_PVK,
+     ind:["Antibiose","Schmerztherapie","Volumentherapie","Medikamentengabe","Kontrastmittelgabe"]},
+    {l:"ZVK", o:"ZVK", loc:L_ZVK,
+     ind:["Antibiose","Parenterale Ernährung","Katecholamintherapie","Volumentherapie","Medikamentengabe","ZVD-Messung","Blutentnahme"]},
+    {l:"Port", o:"Portkatheter", loc:L_PORT,
+     ind:["Chemotherapie","Antibiose","Parenterale Ernährung","Blutentnahme"]},
+    {l:"Arterielle Kanüle", o:"Arterielle Kanüle", loc:L_ART,
+     ind:["Invasive Blutdruckmessung","Blutgasanalysen","Blutentnahme"]},
+    {l:"Shaldon-Katheter", o:"Shaldon-Katheter", loc:L_ZVK,
+     ind:["Dialyse","Volumentherapie","Medikamentengabe"]},
+    {l:"Midline / PICC", o:"Midline-Katheter", loc:["Oberarm re.","Oberarm li."],
+     ind:["Antibiose","Parenterale Ernährung","Medikamentengabe","Blutentnahme"]}
+  ]},
+  {t:"Drainagen", items:[
+    {l:"Redon-Drainage", o:"Redon-Drainage", loc:L_ABD,
+     ind:["Ableitung von Wundsekret","Sekretkontrolle","Serom-/Hämatomprophylaxe"]},
+    {l:"Blake-Drainage", o:"Blake-Drainage", loc:L_ABD,
+     ind:["Ableitung von Wundsekret","Sekretkontrolle","Insuffizienzkontrolle"]},
+    {l:"Easy-Flow-Drainage", o:"Easy-Flow-Drainage", loc:L_ABD,
+     ind:["Ableitung von Wundsekret","Sekretkontrolle","Abszessdrainage"]},
+    {l:"Robinson-Drainage", o:"Robinson-Drainage", loc:L_ABD,
+     ind:["Ableitung von Wundsekret","Sekretkontrolle","Insuffizienzkontrolle"]},
+    {l:"Lasche", o:"Lasche", loc:L_ABD,
+     ind:["Ableitung von Wundsekret","Abszessdrainage","Offenhalten der Wundhöhle"]},
+    {l:"Zieldrainage", o:"Zieldrainage", loc:L_ABD,
+     ind:["Ableitung von Wundsekret","Sekretkontrolle","Insuffizienzkontrolle","Abszessdrainage"]},
+    {l:"Thoraxdrainage", o:"Thoraxdrainage", loc:L_THX,
+     ind:["Luftableitung","Sekretableitung","Pneumothorax","Pleuraerguss","Hämatothorax"]},
+    {l:"T-Drainage", o:"T-Drainage", loc:["Ductus choledochus"],
+     ind:["Galleableitung","Sekretkontrolle","Schienung der Gallenwege"]},
+    {l:"VAC-System", o:"VAC-System", loc:L_ABD,
+     ind:["Wundkonditionierung","Ableitung von Wundsekret","Vorbereitung Sekundärverschluss"]},
+    {l:"Spül-VAC", o:"Spül-VAC", loc:L_ABD,
+     ind:["Instillationstherapie","Infektsanierung","Wundkonditionierung","Ableitung von Wundsekret"]}
+  ]},
+  {t:"Sonden / Katheter / Stomata", items:[
+    {l:"Blasenkatheter (DK)", o:"Blasenkatheter", loc:["transurethral","suprapubisch"],
+     ind:["Harnableitung","Bilanzierung","Harnverhalt"]},
+    {l:"Magensonde", o:"Magensonde", loc:["nasogastral re.","nasogastral li.","oral"],
+     ind:["Magenentlastung","Ableitung von Magensekret","Enterale Ernährung"]},
+    {l:"PEG", o:"PEG-Sonde", loc:["Oberbauch li.","Oberbauch re."],
+     ind:["Enterale Ernährung","Medikamentengabe","Ableitung von Magensekret"]},
+    {l:"PDK", o:"Periduralkatheter", loc:L_PDK,
+     ind:["Schmerztherapie"]},
+    {l:"Schmerzkatheter", o:"Regionaler Schmerzkatheter", loc:["Wundgebiet","Leiste re.","Leiste li.","Oberschenkel re.","Oberschenkel li."],
+     ind:["Schmerztherapie"]},
+    {l:"Ureterschiene (DJ)", o:"Ureterschiene (DJ)", loc:["rechts","links","beidseits"],
+     ind:["Harnableitung","Schienung des Ureters"]},
+    {l:"Enterostoma", o:"Enterostoma", loc:L_STOM,
+     ind:["Stuhlableitung","Protektion der Anastomose","Entlastung"]},
+    {l:"Trachealkanüle", o:"Trachealkanüle", loc:["Tracheostoma"],
+     ind:["Sicherung der Atemwege","Sekretableitung","Beatmung"]}
+  ]}
+];
+
+/* ======================= Zustand ======================= */
+const SEC = ["S","O","A","P","M"];
+const SECNAME = {S:"Subjektiv", O:"Objektiv", A:"Assessment", P:"Procedere", M:"Fremdmaterial"};
+const sel  = {};   // Bausteine: id -> {v:{feld:wert}} · Material: id -> {inst:[{loc,frei,indfrei,i:{}}]}
+const free = {S:"",O:"",A:"",P:"",M:""};
+let   tab  = "S";
+let   fliess = true;
+let   gesch  = "Patient";
+let   dirty  = false;   // Vorschau wurde von Hand bearbeitet
+
+SEC.slice(0,4).forEach(s=>{
+  CATALOG[s].groups.forEach((g,gi)=> g.items.forEach((it,ii)=> it.id = s+gi+"_"+ii));
+});
+MATERIAL.forEach((g,gi)=> g.items.forEach((it,ii)=> it.id = "M"+gi+"_"+ii));
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ======================= Reiter ======================= */
+function renderTabs(){
+  $("#tabs").innerHTML = SEC.map(s=>{
+    const n = countSec(s);
+    return `<button class="tab" role="tab" data-s="${s}" aria-selected="${s===tab}">`+
+           `<span class="k">${s==="M"?"FM":s}</span>`+
+           `<span>${SECNAME[s]}</span>`+
+           `<span class="n ${n?"on":""}">${n}</span></button>`;
+  }).join("");
+}
+function countSec(s){
+  let n = 0;
+  if(s==="M"){ MATERIAL.forEach(g=>g.items.forEach(i=>{ if(sel[i.id]) n += sel[i.id].inst.length; })); }
+  else { CATALOG[s].groups.forEach(g=>g.items.forEach(i=>{ if(sel[i.id]) n++; })); }
+  if(free[s].trim()) n++;
+  return n;
+}
+
+/* ======================= Bausteine rendern ======================= */
+function fieldHTML(it, f){
+  const v = sel[it.id].v[f.k] || "";
+  if(f.t==="pills"){
+    return `<span class="prow">`+f.opts.map(o=>
+      `<span class="pill${v===o?" on":""}" data-id="${it.id}" data-k="${f.k}" data-val="${esc(o)}">${esc(o)}</span>`
+    ).join("")+`</span>`;
+  }
+  const cls = "f" + (f.w?" w":"") + (f.s?" s":"");
+  const base = `class="${cls}" data-id="${it.id}" data-k="${f.k}" placeholder="${esc(f.ph||"")}" value="${esc(v)}"`;
+  if(f.t==="list"){
+    const dl = "dl_"+it.id+"_"+f.k;
+    return `<input ${base} type="text" list="${dl}" autocomplete="off">`+
+           `<datalist id="${dl}">`+f.opts.map(o=>`<option value="${esc(o)}"></option>`).join("")+`</datalist>`;
+  }
+  return `<input ${base} type="${f.t==="num"?"number":"text"}" inputmode="${f.t==="num"?"decimal":"text"}">`;
+}
+
+function chipHTML(it){
+  const on = !!sel[it.id];
+  let inner = `<span class="lbl">${esc(it.l)}</span>`;
+  if(on && it.fields) inner += it.fields.map(f=>fieldHTML(it,f)).join("");
+  return `<div class="chip${on?" on":""}" data-id="${it.id}" role="button" tabindex="0" aria-pressed="${on}">${inner}</div>`;
+}
+
+function instHTML(it, ins, n){
+  const many = sel[it.id].inst.length > 1;
+  const locs = it.loc.map(x=>
+    `<span class="pill${ins.loc===x?" on":""}" data-id="${it.id}" data-n="${n}" data-loc="${esc(x)}">${esc(x)}</span>`).join("");
+  const inds = it.ind.map(x=>
+    `<span class="pill${ins.i[x]?" on":""}" data-id="${it.id}" data-n="${n}" data-ind="${esc(x)}">${esc(x)}</span>`).join("");
+  return `<span class="inst">`+
+    `<span class="irow"><span class="ihd">${many?"#"+(n+1)+" ":""}Lokalisation:</span>`+
+      (many?`<span class="pill del" data-del="${it.id}" data-n="${n}" title="Diesen Eintrag entfernen">×</span>`:"")+
+      locs+
+      `<input class="f s" data-id="${it.id}" data-n="${n}" data-k="frei" type="text" placeholder="sonstige" value="${esc(ins.frei||"")}">`+
+    `</span>`+
+    `<span class="irow"><span class="ihd">Indikation:</span>${inds}`+
+      `<input class="f s" data-id="${it.id}" data-n="${n}" data-k="indfrei" type="text" placeholder="weitere" value="${esc(ins.indfrei||"")}">`+
+    `</span>`+
+  `</span>`;
+}
+
+function matChipHTML(it){
+  const st = sel[it.id], on = !!st;
+  let inner = `<span class="lbl">${esc(it.l)}</span>`;
+  if(on){
+    if(st.inst.length>1) inner += `<span class="cnt">${st.inst.length}×</span>`;
+    inner += st.inst.map((ins,n)=>instHTML(it,ins,n)).join("");
+    inner += `<span class="pill add" data-add="${it.id}">+ weitere/r ${esc(it.l)}</span>`;
+  }
+  return `<div class="chip${on?" on":""}" data-id="${it.id}" role="button" tabindex="0" aria-pressed="${on}">${inner}</div>`;
+}
+
+function renderMain(){
+  const mat = tab==="M";
+  const groups = mat ? MATERIAL : CATALOG[tab].groups;
+  $("#main").innerHTML = groups.map(g=>
+    `<section class="grp"><h2>${esc(g.t)}</h2><div class="chips">`+
+    g.items.map(it=> mat ? matChipHTML(it) : chipHTML(it)).join("")+`</div></section>`
+  ).join("") +
+  `<section class="grp"><h2>Freitext ${esc(SECNAME[tab])}</h2>`+
+  `<textarea class="free" id="freetext" placeholder="Individuelle Ergänzung – wird an die ausgewählten Bausteine angehängt">${esc(free[tab])}</textarea></section>`;
+}
+
+function render(keepScroll){
+  const y = keepScroll ? $("#main").scrollTop : 0;
+  renderTabs(); renderMain(); $("#main").scrollTop = y;
+  update();
+}
+
+/* ======================= Interaktion ======================= */
+function findItem(id){
+  if(id[0]==="M"){ for(const g of MATERIAL) for(const i of g.items) if(i.id===id) return i; }
+  else { for(const g of CATALOG[id[0]].groups) for(const i of g.items) if(i.id===id) return i; }
+  return null;
+}
+const newInst = ()=> ({loc:"", frei:"", indfrei:"", i:{}});
+
+function toggle(id){
+  const it = findItem(id);
+  if(sel[id]){ delete sel[id]; }
+  else if(id[0]==="M"){ sel[id] = {inst:[newInst()]}; }
+  else{
+    if(it.x){ // Ausschluss innerhalb der Gruppe
+      CATALOG[id[0]].groups.forEach(g=>g.items.forEach(o=>{ if(o.x===it.x && sel[o.id]) delete sel[o.id]; }));
+    }
+    sel[id] = {v:{}};
+    (it.fields||[]).forEach(f=>{ if(f.dv) sel[id].v[f.k] = f.dv; });
+  }
+  render(true);
+  const el = document.querySelector(`.chip[data-id="${id}"] .f`);
+  if(el && id[0]!=="M") el.focus();
+}
+
+$("#main").addEventListener("click", e=>{
+  const add = e.target.closest("[data-add]");
+  if(add){ sel[add.dataset.add].inst.push(newInst()); render(true); return; }
+
+  const del = e.target.closest("[data-del]");
+  if(del){
+    const st = sel[del.dataset.del];
+    st.inst.splice(+del.dataset.n, 1);
+    if(!st.inst.length) delete sel[del.dataset.del];
+    render(true); return;
+  }
+
+  const pill = e.target.closest(".pill");
+  if(pill && pill.dataset.id){
+    if(pill.dataset.n !== undefined){          // Fremdmaterial-Instanz
+      const ins = sel[pill.dataset.id].inst[+pill.dataset.n];
+      if(pill.dataset.loc !== undefined) ins.loc = (ins.loc===pill.dataset.loc) ? "" : pill.dataset.loc;
+      else { const k = pill.dataset.ind; ins.i[k] ? delete ins.i[k] : ins.i[k]=true; }
+    } else {                                    // Pill-Auswahl in einem Baustein
+      const v = sel[pill.dataset.id].v, k = pill.dataset.k;
+      v[k] = (v[k]===pill.dataset.val) ? "" : pill.dataset.val;
+    }
+    render(true); return;
+  }
+
+  if(e.target.closest(".f") || e.target.closest(".free")) return;
+  const chip = e.target.closest(".chip");
+  if(chip) toggle(chip.dataset.id);
+});
+
+$("#main").addEventListener("keydown", e=>{
+  if(e.target.classList.contains("chip") && (e.key==="Enter"||e.key===" ")){
+    e.preventDefault(); toggle(e.target.dataset.id);
+  }
+});
+
+$("#main").addEventListener("input", e=>{
+  if(e.target.id==="freetext"){ free[tab]=e.target.value; renderTabs(); update(); return; }
+  if(!e.target.classList.contains("f")) return;
+  const st = sel[e.target.dataset.id];
+  if(!st) return;
+  if(e.target.dataset.n !== undefined) st.inst[+e.target.dataset.n][e.target.dataset.k] = e.target.value;
+  else st.v[e.target.dataset.k] = e.target.value;
+  update();
+});
+
+$("#tabs").addEventListener("click", e=>{
+  const t = e.target.closest(".tab");
+  if(t){ tab = t.dataset.s; render(false); }
+});
+
+/* ======================= Textaufbau ======================= */
+function clean(s){
+  return s.replace(/\s+/g," ").replace(/\(\s*\)/g,"").replace(/\s+([,.;:])/g,"$1")
+          .replace(/,\s*$/,"").replace(/\s+/g," ").trim();
+}
+
+function itemText(it){
+  const v = sel[it.id].v;
+  const fmap = {}; (it.fields||[]).forEach(f=>fmap[f.k]=f);
+  return clean((it.o||it.l).replace(/\{(\w+)\}/g, (m,k)=>{
+    if(k==="P") return gesch;
+    const x = (v[k]||"").trim();
+    if(x) return x;
+    return (fmap[k] && fmap[k].opt) ? "" : "___";
+  }));
+}
+
+function matTexts(it){
+  return sel[it.id].inst.map(ins=>{
+    const det = [];
+    if(ins.loc) det.push(ins.loc);
+    if((ins.frei||"").trim()) det.push(ins.frei.trim());
+    const ind = Object.keys(ins.i);
+    if((ins.indfrei||"").trim()) ind.push(ins.indfrei.trim());
+    let s = it.o + (det.length ? " ("+det.join(", ")+")" : "");
+    if(ind.length) s += " für " + ind.join(", ");
+    return s;
+  });
+}
+
+function partsOf(s){
+  const out = [];
+  if(s==="M"){ MATERIAL.forEach(g=>g.items.forEach(i=>{ if(sel[i.id]) out.push(...matTexts(i)); })); }
+  else { CATALOG[s].groups.forEach(g=>g.items.forEach(i=>{ if(sel[i.id]) out.push(itemText(i)); })); }
+  const f = free[s].trim();
+  if(f) f.split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(x=>out.push(x.replace(/\.$/,"")));
+  return out;
+}
+
+function datumStr(){
+  const d = $("#datum").value;
+  if(!d) return "";
+  const [y,m,t] = d.split("-");
+  return `${t}.${m}.${y}`;
+}
+
+/* Baut den Text; im Fließtext-Modus ohne Leerzeilen */
+function plain(){
+  const L = ["Chirurgische Visite vom "+datumStr()];
+  if(!fliess) L.push("");
+  ["S","O","A","P"].forEach(s=>{
+    const p = partsOf(s);
+    if(!p.length) return;
+    if(fliess){ L.push(s+": "+p.join(". ")+"."); }
+    else{
+      L.push(s+" – "+SECNAME[s]+":");
+      p.forEach(x=>L.push("- "+x));
+    }
+  });
+  const m = partsOf("M");
+  if(m.length){
+    if(!fliess) L.push("");
+    L.push("Einliegendes Fremdmaterial:");
+    m.forEach(x=>L.push("- "+x));
+  }
+  return L.join("\n");
+}
+
+/* Erste nicht-leere Zeile = Überschrift (fett + unterstrichen) */
+function htmlFromText(t){
+  let head = false;
+  return t.split("\n").map(l=>{
+    if(!l.trim()) return "<div><br></div>";
+    if(!head){ head = true; return `<div><b><u>${esc(l)}</u></b></div>`; }
+    return `<div>${esc(l)}</div>`;
+  }).join("");
+}
+
+const currentText = ()=> dirty ? $("#out").innerText.replace(/\n+$/,"") : plain();
+
+function leer(){ return !SEC.some(s=>partsOf(s).length); }
+
+function update(){
+  $("#hint").hidden = dirty || !leer();
+  if(dirty) return;
+  $("#out").innerHTML = htmlFromText(plain());
+}
+
+/* Vorschau von Hand bearbeitet → Aufbau anhalten, bis „Neu aufbauen“ */
+$("#out").addEventListener("input", ()=>{
+  if(dirty) return;
+  dirty = true;
+  $("#out").classList.add("edit");
+  $("#edited").hidden = false;
+  $("#resync").hidden = false;
+  $("#hint").hidden = true;
+});
+function resync(){
+  dirty = false;
+  $("#out").classList.remove("edit");
+  $("#edited").hidden = true;
+  $("#resync").hidden = true;
+  update();
+}
+$("#resync").addEventListener("click", resync);
+
+/* ======================= Zwischenablage ======================= */
+async function copy(){
+  const p = currentText()+"\n", h = htmlFromText(currentText());
+  let ok = false;
+  try{
+    if(navigator.clipboard && window.ClipboardItem && window.isSecureContext){
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html":  new Blob([h], {type:"text/html"}),
+        "text/plain": new Blob([p], {type:"text/plain"})
+      })]);
+      ok = true;
+    }
+  }catch(e){ /* Fallback unten */ }
+
+  if(!ok){ // Fallback für file:// – kopiert ebenfalls formatiert + reinen Text
+    const st = $("#stage");
+    st.innerHTML = h; st.focus();
+    const r = document.createRange(); r.selectNodeContents(st);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+    s.removeAllRanges(); st.innerHTML = "";
+  }
+
+  if(!ok){ // Letzter Ausweg: Vorschau markieren, damit ⌘/Strg+C reicht
+    const r = document.createRange(); r.selectNodeContents($("#out"));
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+
+  const b = $("#copy");
+  b.textContent = ok ? "✓ Kopiert" : "Markiert – jetzt ⌘/Strg+C";
+  b.classList.toggle("done", ok);
+  setTimeout(()=>{ b.textContent = "In Zwischenablage"; b.classList.remove("done"); }, ok?1800:4000);
+}
+$("#copy").addEventListener("click", copy);
+
+/* ======================= Steuerung ======================= */
+$("#geschlecht").addEventListener("click", e=>{
+  const b = e.target.closest(".segb");
+  if(!b) return;
+  gesch = b.dataset.g;
+  [...$("#geschlecht").children].forEach(c=>c.classList.toggle("on", c===b));
+  update();
+});
+$("#modus").addEventListener("click", ()=>{
+  fliess = !fliess;
+  $("#modus").textContent = fliess ? "Fließtext" : "Stichpunkte";
+  update();
+});
+$("#reset").addEventListener("click", ()=>{
+  if(!confirm("Alle Eingaben verwerfen?")) return;
+  Object.keys(sel).forEach(k=>delete sel[k]);
+  SEC.forEach(s=>free[s]="");
+  tab = "S";
+  resync();
+  render(false);
+});
+$("#datum").addEventListener("change", update);
+
+/* Offline-Kopie dieser Seite herunterladen */
+$("#save").addEventListener("click", ()=>{
+  const url = URL.createObjectURL(new Blob([SELF], {type:"text/html;charset=utf-8"}));
+  const a = document.createElement("a");
+  a.href = url; a.download = "visitendokumentation.html";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+});
+
+document.addEventListener("keydown", e=>{
+  if((e.metaKey||e.ctrlKey) && e.key==="Enter"){ e.preventDefault(); copy(); }
+});
+
+/* Start */
+(function init(){
+  const d = new Date();
+  $("#datum").value = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  render(false);
+})();
+</script>
+</body>
+</html>
