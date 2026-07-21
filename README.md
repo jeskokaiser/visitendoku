@@ -112,7 +112,3 @@ Beim Kopieren wird zuerst die asynchrone Clipboard-API versucht; scheitert sie �
 ## Haftungsausschluss
 
 Dieses Werkzeug erzeugt Textvorschläge und ersetzt weder die ärztliche Beurteilung noch die Sorgfaltspflicht bei der Dokumentation. Jeder erzeugte Text ist vor der Übernahme in die Patientenakte auf Richtigkeit und Vollständigkeit zu prüfen. Die Bausteine bilden übliche Formulierungen ab und sind kein Standard und keine Leitlinie.
-
-## Lizenz
-
-MIT
