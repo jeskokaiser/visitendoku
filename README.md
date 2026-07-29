@@ -120,16 +120,7 @@ Platzhalter `{P}` wird zu `Patient` bzw. `Patientin` — auch innerhalb von Ausw
 
 `DRAIN`, `SEKRET`, `SEITE` sowie das fertige Feld `F_SEITE` — einmal ergänzt, wirken sie überall dort, wo sie eingebunden sind. Ein neuer Drainagetyp in `DRAIN` erscheint zum Beispiel sofort in allen Drainage-Auswahlreihen unter O und P.
 
-## Technik
-
-Eine Datei, rund 1070 Zeilen, ~52 kB. Reines HTML, CSS und JavaScript ohne Framework, ohne Build-Prozess, ohne Abhängigkeiten. Helles und dunkles Design folgen der Systemeinstellung.
-
-Beim Kopieren wird zuerst die asynchrone Clipboard-API versucht; scheitert sie — etwa weil die Datei über `file://` geöffnet wurde — greift ein `execCommand`-Fallback, der ebenfalls Rich-Text und reinen Text liefert. Klappt auch das nicht, markiert die Seite den Text, sodass `⌘/Strg + C` genügt.
 
 ## Haftungsausschluss
 
 Dieses Werkzeug erzeugt Textvorschläge und ersetzt weder die ärztliche Beurteilung noch die Sorgfaltspflicht bei der Dokumentation. Jeder erzeugte Text ist vor der Übernahme in die Patientenakte auf Richtigkeit und Vollständigkeit zu prüfen. Die Bausteine bilden übliche Formulierungen ab und sind kein Standard und keine Leitlinie.
-
-## Lizenz
-
-MIT
