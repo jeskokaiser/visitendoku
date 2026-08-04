@@ -45,7 +45,7 @@ Struktur nach **SOAP** plus einliegendes Fremdmaterial. Umschaltbar zwischen **F
 | **„Kein Fremdmaterial"** | Ein Klick ersetzt die ganze Aufzählung durch „Kein einliegendes Fremdmaterial." und schließt sich mit allen Materialien gegenseitig aus |
 | **Anrede M / W** | Steuert alle personenbezogenen Formulierungen im Text |
 | **Freitext je Sektion** | Individuelles ergänzen, wird an die geklickten Bausteine angehängt |
-| **Editierbare Vorschau** | Direkt im Vorschaufeld schreiben; der Automatik-Aufbau pausiert dann sichtbar, bis „↻ Neu aufbauen". Höhe über die Griffleiste ziehbar, Doppelklick setzt zurück |
+| **Editierbare Vorschau** | Direkt im Vorschaufeld schreiben; der nächste Baustein-Klick (oder „↻ Neu aufbauen") übernimmt wieder den Automatiktext. Höhe über die Griffleiste ziehbar, Doppelklick setzt zurück |
 | **Lückenwarnung** | Die wenigen Bausteine, die wirklich eine Angabe brauchen (etwa „Z.n. Operation"), zeigen `___`, farbig markiert und neben „Vorschau" gezählt — damit nichts Unfertiges in die Akte wandert. Reine Auswahllisten wie „V.a." bleiben stumm, bis etwas gewählt ist |
 | **Schutz vor Datenverlust** | Da nichts gespeichert wird, fragt der Browser vor Reload oder Schließen nach, solange etwas erfasst ist |
 | **Rich-Text + Plain-Text** | Kopiert beide Formate gleichzeitig — das KIS nimmt, was es versteht |

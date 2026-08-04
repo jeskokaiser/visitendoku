@@ -336,7 +336,7 @@ footer{
   <div class="fbar">
     <span class="ttl">Vorschau</span>
     <span class="note" id="hint">– noch keine Bausteine ausgewählt –</span>
-    <span class="warn" id="edited" hidden>manuell bearbeitet · Klicks werden nicht mehr übernommen</span>
+    <span class="warn" id="edited" hidden>manuell angepasst · nächster Baustein-Klick übernimmt wieder</span>
     <span class="warn" id="gaps" hidden></span>
     <span class="sp"></span>
     <button class="btn" id="resync" hidden>↻ Neu aufbauen</button>
@@ -1560,7 +1560,7 @@ const freitext = { S:"", O:"", A:"", P:"", M:"" };
 let   reiter   = "S";          // welcher Reiter gerade offen ist
 let   fliesstext = true;       // true = Fließtext, false = Stichpunkte
 let   anrede   = "Patient";    // Schalter M/W
-let   handBearbeitet = false;  // Vorschau wurde von Hand geändert
+let   handBearbeitet = false;  // Vorschau manuell getippt (bis nächster Baustein-Klick)
 
 /* Jeder Baustein bekommt eine eindeutige Kennung aus Reiter, Gruppe und
    Position – z.B. "O1_3". Sie wird nur intern verwendet.                   */
@@ -2048,8 +2048,9 @@ function alsAnzeige(t){
   }).join("\n").replace(/___/g, '<span class="gap">___</span>');
 }
 
-/* Was tatsächlich kopiert wird: der von Hand bearbeitete Text, falls es
-   einen gibt – sonst der automatisch aufgebaute.                           */
+/* Was tatsächlich kopiert wird: der von Hand bearbeitete Text, falls die
+   Vorschau gerade manuell angepasst ist – sonst der automatische Aufbau.
+   Baustein-Klicks bauen die Vorschau wieder automatisch auf.               */
 const aktuellerText = () =>
   handBearbeitet ? $("#out").innerText.replace(/\n+$/, "") : ganzerText();
 
@@ -2063,30 +2064,31 @@ function zaehleLuecken(){
   el.textContent = n === 1 ? "1 Lücke offen" : n + " Lücken offen";
 }
 
+function setzeHandBearbeitung(an){
+  handBearbeitet = an;
+  $("#out").classList.toggle("edit", an);
+  $("#edited").hidden = !an;
+  $("#resync").hidden = !an;
+}
+
+/* Baut die Vorschau aus den Bausteinen neu auf. Manuelle Tipparbeit in der
+   Vorschau wird dabei bewusst ersetzt – so bleiben Baustein-Klicks aktiv.  */
 function aktualisiere(){
-  $("#hint").hidden = handBearbeitet || !nichtsGewaehlt();
-  if(!handBearbeitet) $("#out").innerHTML = alsAnzeige(ganzerText());
+  if(handBearbeitet) setzeHandBearbeitung(false);
+  $("#hint").hidden = !nichtsGewaehlt();
+  $("#out").innerHTML = alsAnzeige(ganzerText());
   zaehleLuecken();
 }
 
-/* Sobald von Hand in die Vorschau geschrieben wird, hört der automatische
-   Aufbau auf – sonst würde der nächste Klick die Formulierung überschreiben. */
+/* Tippen in der Vorschau erlaubt Feinschliff vor dem Kopieren. Der nächste
+   Baustein-Klick (oder „Neu aufbauen") übernimmt wieder den Automatiktext. */
 $("#out").addEventListener("input", () => {
-  if(!handBearbeitet){
-    handBearbeitet = true;
-    $("#out").classList.add("edit");
-    $("#edited").hidden = false;
-    $("#resync").hidden = false;
-    $("#hint").hidden = true;
-  }
+  if(!handBearbeitet) setzeHandBearbeitung(true);
+  $("#hint").hidden = true;
   zaehleLuecken();     // kein Neuaufbau des Feldes – der Cursor bleibt stehen
 });
 
 function wiederAufbauen(){
-  handBearbeitet = false;
-  $("#out").classList.remove("edit");
-  $("#edited").hidden = true;
-  $("#resync").hidden = true;
   aktualisiere();
 }
 $("#resync").addEventListener("click", wiederAufbauen);
