@@ -28,7 +28,9 @@ take effect on a browser reload (no hot-reload/watcher — refresh manually).
 
 ### Gotchas
 
-- The app intentionally persists nothing (no `localStorage`, no cookies, no network). All
-  state lives in memory and is lost on reload — this is by design, not a bug.
+- Patienteneingaben werden absichtlich nicht gespeichert (kein `localStorage`, keine
+  Cookies, kein Netzwerk). Visite-Zustand lebt nur im Speicher und ist nach Reload weg.
+  Baustein-Katalog-Änderungen über die UI müssen explizit mit „HTML speichern" als
+  Datei auf dem PC abgelegt werden — sonst sind auch sie nach Reload weg.
 - Because unsaved input triggers a browser `beforeunload` prompt, automated navigation
   away from a filled-in form may surface a "Leave site?" confirmation.

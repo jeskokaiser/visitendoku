@@ -8,9 +8,10 @@
   Öffnen per Doppelklick oder auf einen Webspace legen – das war es.
 
   ANPASSEN
-  Die Bausteine (also alles, was man anklicken kann) stehen weiter unten im
-  Abschnitt "BAUSTEINE". Davor steht eine ausführliche Anleitung mit Beispielen
-  zum Kopieren. Man braucht dafür nur einen Texteditor.
+  Die Bausteine lassen sich über „Bausteine bearbeiten" in der Oberfläche
+  ändern und mit „HTML speichern" als Datei auf dem PC ablegen.
+  Alternativ stehen sie weiter unten im Abschnitt "BAUSTEINE" und können
+  im Texteditor angepasst werden (Anleitung mit Beispielen darüber).
 
   AUFBAU DIESER DATEI
     1. <style>   – das Aussehen (Farben, Abstände)
@@ -215,6 +216,98 @@ footer{
   .tab{min-width:72px; font-size:13px}
   .ihd{min-width:100%}
 }
+
+/* ───────── Baustein-Editor ───────── */
+#editor{
+  display:none; position:fixed; inset:0; z-index:800;
+  background:var(--bg); color:var(--txt);
+  flex-direction:column; overflow:hidden;
+}
+#editor.open{display:flex}
+#editor header{
+  flex:0 0 auto;
+}
+#editor .ed-body{
+  flex:1; min-height:0; display:flex; overflow:hidden;
+}
+#editor .ed-list{
+  flex:1; min-width:0; overflow-y:auto; padding:12px 12px 24px;
+  -webkit-overflow-scrolling:touch;
+}
+#editor .ed-form{
+  width:min(420px, 100%); flex:0 0 auto; overflow-y:auto;
+  border-left:1px solid var(--line); background:var(--panel);
+  padding:14px 16px 28px; -webkit-overflow-scrolling:touch;
+}
+#editor .ed-form[hidden]{display:none !important}
+#editor .ed-grp{
+  margin-bottom:14px; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px 12px;
+}
+#editor .ed-grp-hd{
+  display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;
+}
+#editor .ed-grp-hd h2{
+  font-size:12px; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--txt-dim); margin:0; font-weight:700; flex:1;
+}
+#editor .ed-row{
+  display:flex; align-items:center; gap:6px; padding:6px 0;
+  border-top:1px solid var(--line); flex-wrap:wrap;
+}
+#editor .ed-row:first-of-type{border-top:0}
+#editor .ed-row .nm{flex:1; min-width:120px; font-weight:600}
+#editor .ed-row .sz{
+  flex:2; min-width:140px; font-size:12px; color:var(--txt-dim);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+#editor .ed-form h3{margin:0 0 12px; font-size:15px}
+#editor .ed-form label{
+  display:block; font-size:12px; font-weight:700; color:var(--txt-dim);
+  text-transform:uppercase; letter-spacing:.06em; margin:12px 0 5px;
+}
+#editor .ed-form label:first-of-type{margin-top:0}
+#editor .ed-form input[type=text],
+#editor .ed-form textarea,
+#editor .ed-form select{
+  width:100%; background:var(--panel-2); border:1px solid var(--line);
+  border-radius:8px; padding:9px 10px; min-height:38px;
+}
+#editor .ed-form textarea{min-height:72px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px}
+#editor .ed-form input:focus,
+#editor .ed-form textarea:focus,
+#editor .ed-form select:focus{outline:2px solid var(--acc); outline-offset:0; border-color:var(--acc)}
+#editor .ed-check{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:14px}
+#editor .ed-check input{width:18px; height:18px; accent-color:var(--acc)}
+#editor .ed-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px}
+#editor .ed-actions .btn.primary{
+  background:var(--acc); border-color:var(--acc); color:#fff; font-weight:700;
+}
+#editor .ed-hint{
+  font-size:12px; color:var(--txt-dim); margin:8px 0 0; line-height:1.45;
+}
+#editor .ed-field{
+  border:1px solid var(--line); border-radius:8px; padding:10px;
+  margin-top:10px; background:var(--panel-2);
+}
+#editor .ed-field-hd{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+#editor .ed-field-hd strong{flex:1; font-size:13px}
+#editor .btn.warn{
+  color:var(--warn); border-color:color-mix(in srgb, var(--warn) 40%, var(--line));
+}
+#editor .btn.sm{padding:6px 10px; min-height:34px; font-size:13px}
+#editor .ed-empty{
+  color:var(--txt-dim); font-style:italic; padding:8px 2px; font-size:13px;
+}
+@media (max-width:720px){
+  #editor .ed-body{flex-direction:column}
+  #editor .ed-form{
+    width:100%; border-left:0; border-top:1px solid var(--line);
+    max-height:55%;
+  }
+  #editor .ed-row .sz{display:none}
+}
 </style>
 </head>
 <body>
@@ -231,7 +324,8 @@ footer{
   <span class="sp"></span>
   <button class="btn" id="modus" title="Ausgabeformat umschalten">Fließtext</button>
   <button class="btn" id="reset">Zurücksetzen</button>
-  <button class="btn" id="save" title="Diese Seite als HTML-Datei für die Nutzung ohne Internet speichern">⤓ Offline-Kopie</button>
+  <button class="btn" id="edit-bausteine" title="Bausteine hinzufügen, ändern oder entfernen">Bausteine bearbeiten</button>
+  <button class="btn" id="save" title="Aktuelle Bausteine in einer HTML-Datei auf diesem PC speichern">⤓ HTML speichern</button>
 </header>
 
 <nav id="tabs"></nav>
@@ -242,7 +336,7 @@ footer{
   <div class="fbar">
     <span class="ttl">Vorschau</span>
     <span class="note" id="hint">– noch keine Bausteine ausgewählt –</span>
-    <span class="warn" id="edited" hidden>manuell bearbeitet · Klicks werden nicht mehr übernommen</span>
+    <span class="warn" id="edited" hidden>manuell angepasst · nächster Baustein-Klick übernimmt wieder</span>
     <span class="warn" id="gaps" hidden></span>
     <span class="sp"></span>
     <button class="btn" id="resync" hidden>↻ Neu aufbauen</button>
@@ -251,6 +345,21 @@ footer{
   <div id="out" contenteditable="true"></div>
 </footer>
 <div id="stage" contenteditable="true"></div>
+
+<!-- Baustein-Editor: vollflächig über der Anwendung -->
+<div id="editor" aria-hidden="true">
+  <header>
+    <h1>Bausteine bearbeiten</h1>
+    <span class="sp"></span>
+    <button class="btn" id="ed-save" title="Geänderte Bausteine als HTML-Datei speichern">⤓ HTML speichern</button>
+    <button class="btn" id="ed-close">Fertig</button>
+  </header>
+  <nav id="ed-tabs"></nav>
+  <div class="ed-body">
+    <div class="ed-list" id="ed-list"></div>
+    <aside class="ed-form" id="ed-form" hidden></aside>
+  </div>
+</div>
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════
@@ -308,11 +417,18 @@ const SELF = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
    ╚═══════════════════════════════════════════════════════════════════════╝
 
    Alles, was in der Anwendung anklickbar ist, steht unten in der Liste
-   BAUSTEINE. Zum Ändern: Datei im Texteditor öffnen, Zeile anpassen,
-   speichern, Seite im Browser neu laden (Strg+R bzw. Cmd+R). Fertig.
+   BAUSTEINE. Zum Ändern gibt es zwei Wege:
+
+   A) Über die Oberfläche: Knopf „Bausteine bearbeiten" oben rechts.
+      Änderungen mit „HTML speichern" als Datei auf dem PC ablegen und
+      diese Datei künftig öffnen – sonst sind die Anpassungen nach dem
+      Neuladen wieder weg.
+
+   B) Direkt in der Datei: Im Texteditor öffnen, Zeile anpassen,
+      speichern, Seite im Browser neu laden (Strg+R bzw. Cmd+R).
 
 
-   ─── GRUNDREGELN ────────────────────────────────────────────────────────
+   ─── GRUNDREGELN (nur für Weg B, Texteditor) ───────────────────────────
 
    • Jeder Text steht in "doppelten Anführungszeichen".
    • Nach jedem Eintrag kommt ein Komma – außer beim letzten vor einer
@@ -517,6 +633,7 @@ const FELD_PLAN = { name:"plan", art:"auswahl", titel:"Planung",
    ║                                                                       ║
    ╚═══════════════════════════════════════════════════════════════════════╝ */
 
+/*@@BAUSTEINE_BEGIN@@*/
 const BAUSTEINE = {
 
 /* ═════════════════════════════ S – SUBJEKTIV ═════════════════════════════
@@ -1414,6 +1531,7 @@ M:{ name:"Fremdmaterial", gruppen:[
 ]}
 
 };  /* ← Ende der BAUSTEINE. Ab hier beginnt die Programmlogik. */
+/*@@BAUSTEINE_END@@*/
 
 
 /* ╔═══════════════════════════════════════════════════════════════════════╗
@@ -1442,13 +1560,16 @@ const freitext = { S:"", O:"", A:"", P:"", M:"" };
 let   reiter   = "S";          // welcher Reiter gerade offen ist
 let   fliesstext = true;       // true = Fließtext, false = Stichpunkte
 let   anrede   = "Patient";    // Schalter M/W
-let   handBearbeitet = false;  // Vorschau wurde von Hand geändert
+let   handBearbeitet = false;  // Vorschau manuell getippt (bis nächster Baustein-Klick)
 
 /* Jeder Baustein bekommt eine eindeutige Kennung aus Reiter, Gruppe und
    Position – z.B. "O1_3". Sie wird nur intern verwendet.                   */
-REITER.forEach(r =>
-  BAUSTEINE[r].gruppen.forEach((g, gi) =>
-    g.bausteine.forEach((b, bi) => b.id = r + gi + "_" + bi)));
+function idsNeuVergeben(){
+  REITER.forEach(r =>
+    BAUSTEINE[r].gruppen.forEach((g, gi) =>
+      g.bausteine.forEach((b, bi) => { b.id = r + gi + "_" + bi; })));
+}
+idsNeuVergeben();
 
 const $ = s => document.querySelector(s);
 
@@ -1501,7 +1622,11 @@ function pruefeBausteine(){
     if(!satz) probleme.push(wo + ": kein \"satz\" angegeben");
   })));
 
-  if(!probleme.length) return;
+  if(!probleme.length){
+    const box = $("#pruefung");
+    if(box){ box.hidden = true; box.innerHTML = ""; }
+    return;
+  }
   const box = $("#pruefung");
   box.hidden = false;
   box.innerHTML = "<b>Hinweis: In den Bausteinen stimmt etwas nicht "
@@ -1923,8 +2048,9 @@ function alsAnzeige(t){
   }).join("\n").replace(/___/g, '<span class="gap">___</span>');
 }
 
-/* Was tatsächlich kopiert wird: der von Hand bearbeitete Text, falls es
-   einen gibt – sonst der automatisch aufgebaute.                           */
+/* Was tatsächlich kopiert wird: der von Hand bearbeitete Text, falls die
+   Vorschau gerade manuell angepasst ist – sonst der automatische Aufbau.
+   Baustein-Klicks bauen die Vorschau wieder automatisch auf.               */
 const aktuellerText = () =>
   handBearbeitet ? $("#out").innerText.replace(/\n+$/, "") : ganzerText();
 
@@ -1938,30 +2064,31 @@ function zaehleLuecken(){
   el.textContent = n === 1 ? "1 Lücke offen" : n + " Lücken offen";
 }
 
+function setzeHandBearbeitung(an){
+  handBearbeitet = an;
+  $("#out").classList.toggle("edit", an);
+  $("#edited").hidden = !an;
+  $("#resync").hidden = !an;
+}
+
+/* Baut die Vorschau aus den Bausteinen neu auf. Manuelle Tipparbeit in der
+   Vorschau wird dabei bewusst ersetzt – so bleiben Baustein-Klicks aktiv.  */
 function aktualisiere(){
-  $("#hint").hidden = handBearbeitet || !nichtsGewaehlt();
-  if(!handBearbeitet) $("#out").innerHTML = alsAnzeige(ganzerText());
+  if(handBearbeitet) setzeHandBearbeitung(false);
+  $("#hint").hidden = !nichtsGewaehlt();
+  $("#out").innerHTML = alsAnzeige(ganzerText());
   zaehleLuecken();
 }
 
-/* Sobald von Hand in die Vorschau geschrieben wird, hört der automatische
-   Aufbau auf – sonst würde der nächste Klick die Formulierung überschreiben. */
+/* Tippen in der Vorschau erlaubt Feinschliff vor dem Kopieren. Der nächste
+   Baustein-Klick (oder „Neu aufbauen") übernimmt wieder den Automatiktext. */
 $("#out").addEventListener("input", () => {
-  if(!handBearbeitet){
-    handBearbeitet = true;
-    $("#out").classList.add("edit");
-    $("#edited").hidden = false;
-    $("#resync").hidden = false;
-    $("#hint").hidden = true;
-  }
+  if(!handBearbeitet) setzeHandBearbeitung(true);
+  $("#hint").hidden = true;
   zaehleLuecken();     // kein Neuaufbau des Feldes – der Cursor bleibt stehen
 });
 
 function wiederAufbauen(){
-  handBearbeitet = false;
-  $("#out").classList.remove("edit");
-  $("#edited").hidden = true;
-  $("#resync").hidden = true;
   aktualisiere();
 }
 $("#resync").addEventListener("click", wiederAufbauen);
@@ -2088,9 +2215,60 @@ $("#datum").addEventListener("change", aktualisiere);
   window.addEventListener("resize", () => setze(feld.offsetHeight));
 })();
 
-/* Offline-Kopie: lädt diese Seite als eigenständige Datei herunter. */
-$("#save").addEventListener("click", () => {
-  const url = URL.createObjectURL(new Blob([SELF], { type:"text/html;charset=utf-8" }));
+/* Offline-/HTML-Speichern: schreibt die aktuellen Bausteine in die Datei.
+   In Chrome/Edge (sichere Herkunft) kann direkt überschrieben werden;
+   sonst landet die Datei im Download-Ordner.                               */
+const BAUSTEINE_MARK_A = "/*@@BAUSTEINE_BEGIN@@*/";
+const BAUSTEINE_MARK_B = "/*@@BAUSTEINE_END@@*/";
+let bausteineGeaendert = false;   // Katalog geändert, HTML noch nicht gespeichert
+let dateiHandle = null;           // File-System-Access-Handle, falls vorhanden
+
+/* Kopie ohne Laufzeitfelder (id) – so landet nur Kataloginhalt in der Datei. */
+function bausteineSauber(){
+  return JSON.parse(JSON.stringify(BAUSTEINE, (k, v) => k === "id" ? undefined : v));
+}
+
+function bausteineAlsQuelltext(){
+  /* < im JSON escapen, damit der HTML-Parser kein schliessendes Script-Tag sieht. */
+  const json = JSON.stringify(bausteineSauber(), null, 2).replace(/</g, "\\u003c");
+  return BAUSTEINE_MARK_A + "\nconst BAUSTEINE = "
+       + json
+       + ";\n" + BAUSTEINE_MARK_B;
+}
+
+function htmlMitAktuellenBausteinen(){
+  const a = SELF.indexOf(BAUSTEINE_MARK_A);
+  const b = SELF.indexOf(BAUSTEINE_MARK_B);
+  if(a < 0 || b < 0 || b < a)
+    throw new Error("Speichermarkierungen in der Datei fehlen.");
+  return SELF.slice(0, a) + bausteineAlsQuelltext() + SELF.slice(b + BAUSTEINE_MARK_B.length);
+}
+
+async function speichereHTML(){
+  const html = htmlMitAktuellenBausteinen();
+  const blob = new Blob([html], { type:"text/html;charset=utf-8" });
+
+  /* Bevorzugt: echte Datei auf dem PC (File System Access API). */
+  if(window.showSaveFilePicker){
+    try{
+      if(!dateiHandle){
+        dateiHandle = await window.showSaveFilePicker({
+          suggestedName: "visitendokumentation.html",
+          types:[{ description:"HTML", accept:{ "text/html":[".html"] } }]
+        });
+      }
+      const writable = await dateiHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      bausteineGeaendert = false;
+      return "gespeichert";
+    } catch(err){
+      if(err && err.name === "AbortError") return "abgebrochen";
+      dateiHandle = null;   /* Handle ungültig → Download-Fallback */
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = "visitendokumentation.html";
@@ -2098,16 +2276,483 @@ $("#save").addEventListener("click", () => {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
+  bausteineGeaendert = false;
+  return "download";
+}
+
+function speichernKurzfeedback(ziel, art){
+  if(!ziel) return;
+  const alt = ziel.textContent;
+  ziel.textContent = art === "gespeichert" ? "✓ Gespeichert"
+                   : art === "download"    ? "✓ Heruntergeladen"
+                   : art === "abgebrochen" ? "Abgebrochen"
+                   : "Fehler";
+  setTimeout(() => { ziel.textContent = alt; }, 1800);
+}
+
+$("#save").addEventListener("click", async () => {
+  try{
+    const art = await speichereHTML();
+    speichernKurzfeedback($("#save"), art);
+  } catch(err){
+    alert("Speichern fehlgeschlagen: " + (err && err.message ? err.message : err));
+  }
 });
+
+
+/* ═══════════════════════ BAUSTEIN-EDITOR ════════════════════════════════
+   Ermöglicht Hinzufügen, Ändern und Entfernen ohne Texteditor.
+   Strukturänderungen leeren die aktuelle Auswahl (IDs ändern sich).        */
+
+let edReiter = "S";
+let edZiel = null;   /* { art:"baustein"|"gruppe"|"neu"|"neugruppe", gi, bi } */
+
+function katalogGeaendert(struktur){
+  bausteineGeaendert = true;
+  if(struktur){
+    Object.keys(gewaehlt).forEach(k => delete gewaehlt[k]);
+    idsNeuVergeben();
+  }
+  pruefeBausteine();
+}
+
+function oeffneEditor(){
+  edReiter = reiter;
+  edZiel = null;
+  const box = $("#editor");
+  box.classList.add("open");
+  box.setAttribute("aria-hidden", "false");
+  zeichneEditor();
+}
+
+function schliesseEditor(){
+  $("#editor").classList.remove("open");
+  $("#editor").setAttribute("aria-hidden", "true");
+  edZiel = null;
+  $("#ed-form").hidden = true;
+  $("#ed-form").innerHTML = "";
+  idsNeuVergeben();
+  zeichne(false);
+}
+
+function zeichneEdReiter(){
+  $("#ed-tabs").innerHTML = REITER.map(r =>
+    `<button class="tab" type="button" data-s="${r}" aria-selected="${r===edReiter}">`
+    + `<span class="k">${r==="M" ? "FM" : r}</span>`
+    + `<span>${esc(BAUSTEINE[r].name)}</span></button>`
+  ).join("");
+}
+
+function zeichneEdListe(){
+  const gruppen = BAUSTEINE[edReiter].gruppen;
+  let html = "";
+  if(!gruppen.length)
+    html = `<p class="ed-empty">Noch keine Gruppe in diesem Reiter.</p>`;
+
+  gruppen.forEach((g, gi) => {
+    html += `<section class="ed-grp" data-gi="${gi}">`
+      + `<div class="ed-grp-hd">`
+      + `<h2>${esc(g.gruppe || "(ohne Überschrift)")}</h2>`
+      + `<button type="button" class="btn sm" data-ed="edit-grp" data-gi="${gi}">Gruppe</button>`
+      + `<button type="button" class="btn sm warn" data-ed="del-grp" data-gi="${gi}" `
+      + `title="Gruppe und alle Bausteine darin löschen">Löschen</button>`
+      + `</div>`;
+
+    if(!g.bausteine.length)
+      html += `<p class="ed-empty">Keine Bausteine in dieser Gruppe.</p>`;
+
+    g.bausteine.forEach((b, bi) => {
+      html += `<div class="ed-row">`
+        + `<span class="nm">${esc(b.knopf)}</span>`
+        + `<span class="sz" title="${esc(b.satz || "")}">${esc(b.satz || "")}</span>`
+        + `<button type="button" class="btn sm" data-ed="edit" data-gi="${gi}" data-bi="${bi}">Bearbeiten</button>`
+        + `<button type="button" class="btn sm warn" data-ed="del" data-gi="${gi}" data-bi="${bi}">Löschen</button>`
+        + `</div>`;
+    });
+
+    html += `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">`
+      + `<button type="button" class="btn sm" data-ed="add" data-gi="${gi}">+ Baustein</button>`
+      + `</div></section>`;
+  });
+
+  html += `<div style="margin-top:8px">`
+    + `<button type="button" class="btn" data-ed="add-grp">+ Neue Gruppe</button>`
+    + `</div>`;
+
+  $("#ed-list").innerHTML = html;
+}
+
+function optionenAlsText(opts){
+  return (opts || []).map(o => {
+    const [a, s] = paar(o);
+    return a === s ? a : a + " | " + s;
+  }).join("\n");
+}
+
+function textAlsOptionen(text){
+  return text.split("\n").map(z => z.trim()).filter(Boolean).map(z => {
+    const i = z.indexOf("|");
+    if(i < 0) return z;
+    const a = z.slice(0, i).trim();
+    const s = z.slice(i + 1).trim();
+    return a === s ? a : [a, s];
+  });
+}
+
+function zeichneEdForm(){
+  const form = $("#ed-form");
+  if(!edZiel){ form.hidden = true; form.innerHTML = ""; return; }
+  form.hidden = false;
+
+  if(edZiel.art === "gruppe" || edZiel.art === "neugruppe"){
+    const name = edZiel.art === "gruppe"
+      ? (BAUSTEINE[edReiter].gruppen[edZiel.gi].gruppe || "")
+      : "";
+    form.innerHTML =
+      `<h3>${edZiel.art === "neugruppe" ? "Neue Gruppe" : "Gruppe umbenennen"}</h3>`
+      + `<label for="ed-grp-name">Überschrift</label>`
+      + `<input type="text" id="ed-grp-name" value="${esc(name)}" `
+      + `placeholder="leer = ohne Überschrift">`
+      + `<p class="ed-hint">Leer lassen, wenn die Gruppe keine Zwischenüberschrift haben soll.</p>`
+      + `<div class="ed-actions">`
+      + `<button type="button" class="btn primary" data-ed="save-form">Übernehmen</button>`
+      + `<button type="button" class="btn" data-ed="cancel-form">Abbrechen</button>`
+      + `</div>`;
+    return;
+  }
+
+  let b;
+  if(edZiel.art === "neu"){
+    b = edZiel._stub || { knopf:"", satz:"", mehrfach:false, alleinstehend:false, nurEines:"", felder:[] };
+  } else {
+    b = BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi];
+  }
+
+  const felderHtml = (b.felder || []).map((f, fi) => {
+    const artLabel = f.art === "mehrfachauswahl" ? "Mehrfachauswahl"
+                   : f.art === "auswahl" ? "Auswahl"
+                   : f.art === "zahl" ? "Zahl" : "Text";
+    let extra = "";
+    if(istAuswahl(f)){
+      extra = `<label>Optionen (eine je Zeile; optional „Aufschrift | Satzteil")</label>`
+            + `<textarea data-ed-opt="${fi}" rows="5">${esc(optionenAlsText(f.optionen))}</textarea>`
+            + `<label>Vorgabe (Satzteil, exakt)</label>`
+            + `<input type="text" data-ed-vorgabe="${fi}" value="${esc(f.vorgabe || "")}">`;
+    } else {
+      extra = `<label>Platzhalter im leeren Feld</label>`
+            + `<input type="text" data-ed-hinweis="${fi}" value="${esc(f.hinweis || "")}">`
+            + `<label>Vorgabe</label>`
+            + `<input type="text" data-ed-vorgabe="${fi}" value="${esc(f.vorgabe || "")}">`;
+    }
+    return `<div class="ed-field" data-fi="${fi}">`
+      + `<div class="ed-field-hd"><strong>${esc(f.name)} · ${artLabel}</strong>`
+      + `<button type="button" class="btn sm warn" data-ed="del-field" data-fi="${fi}">Feld weg</button></div>`
+      + `<label>Text davor / danach (nur wenn ausgefüllt)</label>`
+      + `<div style="display:flex;gap:6px">`
+      + `<input type="text" data-ed-davor="${fi}" value="${esc(f.davor || "")}" placeholder="davor">`
+      + `<input type="text" data-ed-danach="${fi}" value="${esc(f.danach || "")}" placeholder="danach">`
+      + `</div>`
+      + `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+      + `<input type="checkbox" data-ed-frei="${fi}" ${f.freiwillig ? "checked" : ""}> freiwillig (darf leer bleiben)</label>`
+      + (istAuswahl(f)
+          ? `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+            + `<input type="checkbox" data-ed-eigene="${fi}" ${f.eigeneEingabe ? "checked" : ""}> eigene Eingabe („sonstige")</label>`
+          : "")
+      + (f.art === "mehrfachauswahl"
+          ? `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+            + `<input type="checkbox" data-ed-einzeln="${fi}" ${f.einzelsaetze ? "checked" : ""}> jede Auswahl eigener Satz</label>`
+          : "")
+      + extra
+      + `</div>`;
+  }).join("");
+
+  form.innerHTML =
+    `<h3>${edZiel.art === "neu" ? "Neuer Baustein" : "Baustein bearbeiten"}</h3>`
+    + `<label for="ed-knopf">Knopfaufschrift</label>`
+    + `<input type="text" id="ed-knopf" value="${esc(b.knopf || "")}">`
+    + `<label for="ed-satz">Satz (ohne Punkt am Ende; Platzhalter wie {z})</label>`
+    + `<textarea id="ed-satz" rows="3">${esc(b.satz || "")}</textarea>`
+    + `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+    + `<input type="checkbox" id="ed-mehrfach" ${b.mehrfach ? "checked" : ""}> mehrfach anlegbar</label>`
+    + `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+    + `<input type="checkbox" id="ed-allein" ${b.alleinstehend ? "checked" : ""}> alleinstehend (schließt andere im Reiter aus)</label>`
+    + `<label for="ed-nureines">Ausschlussgruppe (nurEines)</label>`
+    + `<input type="text" id="ed-nureines" value="${esc(b.nurEines || "")}" `
+    + `placeholder="z.B. schmerz – leer = keine">`
+    + `<label>Felder</label>`
+    + (felderHtml || `<p class="ed-empty">Keine Felder – der Satz steht fest.</p>`)
+    + `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="auswahl">+ Auswahl</button>`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="mehrfachauswahl">+ Mehrfachauswahl</button>`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="text">+ Textfeld</button>`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="zahl">+ Zahlenfeld</button>`
+    + `</div>`
+    + `<p class="ed-hint">Neue Felder brauchen einen Namen (z.B. z) und denselben Platzhalter im Satz: {z}.</p>`
+    + `<div class="ed-actions">`
+    + `<button type="button" class="btn primary" data-ed="save-form">Übernehmen</button>`
+    + `<button type="button" class="btn" data-ed="cancel-form">Abbrechen</button>`
+    + `</div>`;
+}
+
+function zeichneEditor(){
+  zeichneEdReiter();
+  zeichneEdListe();
+  zeichneEdForm();
+}
+
+function liesFelderAusForm(alteFelder){
+  const form = $("#ed-form");
+  const felder = [];
+  form.querySelectorAll(".ed-field").forEach((box, fi) => {
+    const alt = (alteFelder || [])[fi] || { name:"z", art:"auswahl", optionen:[] };
+    const f = {
+      name: alt.name,
+      art: alt.art
+    };
+    if(alt.titel) f.titel = alt.titel;
+    const davor = box.querySelector("[data-ed-davor]");
+    const danach = box.querySelector("[data-ed-danach]");
+    if(davor && davor.value) f.davor = davor.value;
+    if(danach && danach.value) f.danach = danach.value;
+    if(box.querySelector("[data-ed-frei]")?.checked) f.freiwillig = true;
+    if(box.querySelector("[data-ed-eigene]")?.checked) f.eigeneEingabe = true;
+    if(box.querySelector("[data-ed-einzeln]")?.checked) f.einzelsaetze = true;
+    if(alt.breit) f.breit = true;
+    if(alt.mittel) f.mittel = true;
+    if(alt.trenner) f.trenner = alt.trenner;
+
+    const vorgabe = box.querySelector("[data-ed-vorgabe]");
+    if(vorgabe && vorgabe.value.trim()) f.vorgabe = vorgabe.value.trim();
+
+    if(istAuswahl(f)){
+      const opt = box.querySelector("[data-ed-opt]");
+      f.optionen = textAlsOptionen(opt ? opt.value : "");
+    } else {
+      const hinweis = box.querySelector("[data-ed-hinweis]");
+      if(hinweis && hinweis.value.trim()) f.hinweis = hinweis.value.trim();
+    }
+    felder.push(f);
+  });
+  return felder;
+}
+
+function naechsterFeldname(felder){
+  const benutzt = new Set((felder || []).map(f => f.name));
+  const kandidaten = ["z","n","q","d","m","i","ort","s","plan","x","y","a","b","c"];
+  for(const k of kandidaten) if(!benutzt.has(k)) return k;
+  let i = 1;
+  while(benutzt.has("f" + i)) i++;
+  return "f" + i;
+}
+
+function uebernehmeForm(){
+  if(!edZiel) return;
+
+  if(edZiel.art === "neugruppe"){
+    const name = ($("#ed-grp-name").value || "").trim();
+    BAUSTEINE[edReiter].gruppen.push({ gruppe:name, bausteine:[] });
+    katalogGeaendert(true);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+  if(edZiel.art === "gruppe"){
+    BAUSTEINE[edReiter].gruppen[edZiel.gi].gruppe =
+      ($("#ed-grp-name").value || "").trim();
+    katalogGeaendert(false);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+
+  const knopf = ($("#ed-knopf").value || "").trim();
+  const satz  = ($("#ed-satz").value || "").trim();
+  if(!knopf){ alert("Bitte eine Knopfaufschrift angeben."); return; }
+  if(!satz){ alert("Bitte einen Satz angeben."); return; }
+
+  const altFelder = edZiel.art === "neu"
+    ? ((edZiel._stub && edZiel._stub.felder) || [])
+    : (BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi].felder || []);
+  const felder = liesFelderAusForm(altFelder);
+
+  const neu = { knopf, satz };
+  if($("#ed-mehrfach").checked) neu.mehrfach = true;
+  if($("#ed-allein").checked) neu.alleinstehend = true;
+  const nur = ($("#ed-nureines").value || "").trim();
+  if(nur) neu.nurEines = nur;
+  if(felder.length) neu.felder = felder;
+
+  if(edZiel.art === "neu"){
+    BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine.push(neu);
+    katalogGeaendert(true);
+  } else {
+    const ziel = BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi];
+    const id = ziel.id;
+    Object.keys(ziel).forEach(k => { if(k !== "id") delete ziel[k]; });
+    Object.assign(ziel, neu);
+    if(id) ziel.id = id;
+    /* Auswahl zu diesem Baustein verwerfen – Felder können sich geändert haben */
+    if(gewaehlt[id]) delete gewaehlt[id];
+    katalogGeaendert(false);
+  }
+  edZiel = null;
+  zeichneEditor();
+}
+
+$("#edit-bausteine").addEventListener("click", oeffneEditor);
+$("#ed-close").addEventListener("click", schliesseEditor);
+
+$("#ed-save").addEventListener("click", async () => {
+  try{
+    const art = await speichereHTML();
+    speichernKurzfeedback($("#ed-save"), art);
+  } catch(err){
+    alert("Speichern fehlgeschlagen: " + (err && err.message ? err.message : err));
+  }
+});
+
+$("#ed-tabs").addEventListener("click", e => {
+  const t = e.target.closest(".tab");
+  if(!t) return;
+  edReiter = t.dataset.s;
+  edZiel = null;
+  zeichneEditor();
+});
+
+$("#ed-list").addEventListener("click", e => {
+  const btn = e.target.closest("[data-ed]");
+  if(!btn) return;
+  const gi = btn.dataset.gi !== undefined ? +btn.dataset.gi : null;
+  const bi = btn.dataset.bi !== undefined ? +btn.dataset.bi : null;
+  const ed = btn.dataset.ed;
+
+  if(ed === "edit"){
+    edZiel = { art:"baustein", gi, bi };
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "add"){
+    edZiel = { art:"neu", gi };
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "del"){
+    const b = BAUSTEINE[edReiter].gruppen[gi].bausteine[bi];
+    if(!confirm(`Baustein „${b.knopf}" wirklich löschen?`)) return;
+    BAUSTEINE[edReiter].gruppen[gi].bausteine.splice(bi, 1);
+    katalogGeaendert(true);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+  if(ed === "edit-grp"){
+    edZiel = { art:"gruppe", gi };
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "del-grp"){
+    const g = BAUSTEINE[edReiter].gruppen[gi];
+    const n = g.bausteine.length;
+    if(!confirm(`Gruppe „${g.gruppe || "(ohne Überschrift)"}" mit ${n} Baustein(en) löschen?`))
+      return;
+    BAUSTEINE[edReiter].gruppen.splice(gi, 1);
+    katalogGeaendert(true);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+  if(ed === "add-grp"){
+    edZiel = { art:"neugruppe" };
+    zeichneEdForm();
+  }
+});
+
+$("#ed-form").addEventListener("click", e => {
+  const btn = e.target.closest("[data-ed]");
+  if(!btn) return;
+  const ed = btn.dataset.ed;
+
+  if(ed === "cancel-form"){
+    edZiel = null;
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "save-form"){
+    uebernehmeForm();
+    return;
+  }
+  if(ed === "del-field" || ed === "add-field"){
+    const stand = formularZwischenstand();
+    if(ed === "del-field"){
+      stand.felder.splice(+btn.dataset.fi, 1);
+    } else {
+      const art = btn.dataset.art;
+      const name = naechsterFeldname(stand.felder);
+      const neu = { name, art };
+      if(art === "auswahl" || art === "mehrfachauswahl"){
+        neu.optionen = ["Option A", "Option B"];
+        neu.vorgabe = "Option A";
+      } else {
+        neu.hinweis = art === "zahl" ? "Zahl" : "Text";
+        neu.freiwillig = true;
+      }
+      if(!stand.satz.includes("{" + name + "}"))
+        stand.satz = (stand.satz || "").trim() + "{" + name + "}";
+      stand.felder.push(neu);
+    }
+    zwischenstandAnwenden(stand);
+    zeichneEdForm();
+  }
+});
+
+/* Liest Knopf/Satz/Flags/Felder aus dem offenen Formular. */
+function formularZwischenstand(){
+  const alt = edZiel.art === "neu"
+    ? ((edZiel._stub && edZiel._stub.felder) || [])
+    : (BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi].felder || []);
+  return {
+    knopf: $("#ed-knopf").value,
+    satz: $("#ed-satz").value,
+    mehrfach: $("#ed-mehrfach").checked,
+    alleinstehend: $("#ed-allein").checked,
+    nurEines: $("#ed-nureines").value,
+    felder: liesFelderAusForm(alt)
+  };
+}
+
+function zwischenstandAnwenden(stand){
+  if(edZiel.art === "neu"){
+    edZiel._stub = stand;
+    return;
+  }
+  const ziel = BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi];
+  ziel.knopf = stand.knopf;
+  ziel.satz = stand.satz;
+  if(stand.mehrfach) ziel.mehrfach = true; else delete ziel.mehrfach;
+  if(stand.alleinstehend) ziel.alleinstehend = true; else delete ziel.alleinstehend;
+  const nur = (stand.nurEines || "").trim();
+  if(nur) ziel.nurEines = nur; else delete ziel.nurEines;
+  if(stand.felder.length) ziel.felder = stand.felder; else delete ziel.felder;
+  bausteineGeaendert = true;
+}
+
 
 document.addEventListener("keydown", e => {
   if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); kopiere(); }
+  if(e.key === "Escape" && $("#editor").classList.contains("open")){
+    e.preventDefault();
+    schliesseEditor();
+  }
 });
 
-/* Nichts wird gespeichert – deshalb vor dem Verlassen warnen, solange etwas
-   erfasst ist. Der Download der Offline-Kopie löst das nicht aus.          */
+/* Nichts wird serverseitig gespeichert – vor dem Verlassen warnen, solange
+   eine Visite erfasst ist oder Baustein-Änderungen noch nicht in HTML
+   geschrieben wurden. Der Datei-Download löst das nicht aus.               */
 window.addEventListener("beforeunload", e => {
-  if(handBearbeitet || !nichtsGewaehlt()){ e.preventDefault(); e.returnValue = ""; }
+  if(bausteineGeaendert || handBearbeitet || !nichtsGewaehlt()){
+    e.preventDefault();
+    e.returnValue = "";
+  }
 });
 
 
