@@ -406,9 +406,33 @@ window.addEventListener("error", function(ev){
 <script>
 "use strict";
 
-/* Kopie der Seite für den Knopf "Offline-Kopie" – muss ganz am Anfang stehen,
-   solange die Seite noch unverändert ist. */
-const SELF = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+/* Vorlage für "HTML speichern": die Originaldatei, in der später nur der
+   BAUSTEINE-Block ausgetauscht wird. document.documentElement.outerHTML
+   verliert Kommentare vor <html> (Dateikopf) und formatiert den Rest um.
+   Deshalb Dateikopf extra einsammeln und – sobald möglich – die echte
+   Dateiquelle per fetch nehmen. Muss früh laufen, solange der DOM noch
+   unverändert ist (Fallback, falls fetch z. B. unter file:// scheitert). */
+function dateiKopfVorHtml(){
+  let kopf = "";
+  for(const n of document.childNodes){
+    if(n === document.documentElement) break;
+    if(n.nodeType === Node.DOCUMENT_TYPE_NODE)
+      kopf += "<!DOCTYPE html>\n";
+    else if(n.nodeType === Node.COMMENT_NODE)
+      kopf += "<!--" + n.nodeValue + "-->\n";
+    else if(n.nodeType === Node.TEXT_NODE)
+      kopf += n.nodeValue;
+  }
+  return kopf || "<!DOCTYPE html>\n";
+}
+let SELF = dateiKopfVorHtml() + document.documentElement.outerHTML;
+const originalQuelleBereit = fetch(location.href, { cache:"no-store" })
+  .then(r => r.ok ? r.text() : "")
+  .then(t => {
+    if(t.includes("/*@@BAUSTEINE_BEGIN@@*/") && t.includes("/*@@BAUSTEINE_END@@*/"))
+      SELF = t;
+  })
+  .catch(() => {});
 
 
 /* ╔═══════════════════════════════════════════════════════════════════════╗
@@ -2246,6 +2270,7 @@ function htmlMitAktuellenBausteinen(){
 }
 
 async function speichereHTML(){
+  await originalQuelleBereit;
   const html = htmlMitAktuellenBausteinen();
   const blob = new Blob([html], { type:"text/html;charset=utf-8" });
 
