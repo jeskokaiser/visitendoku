@@ -86,6 +86,48 @@ header .sp{flex:1}
 }
 .btn:hover{border-color:var(--acc-line)}
 .btn:active{transform:translateY(1px)}
+#teilnehmer.on{
+  background:var(--acc); color:#fff; border-color:var(--acc);
+}
+
+/* Dialog: Teilnehmer der Visite */
+.dlg{
+  position:fixed; inset:0; z-index:700;
+  background:rgba(16,21,27,.45);
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:max(24px, 8vh) 16px 16px;
+}
+.dlg[hidden]{display:none !important}
+.dlg-card{
+  background:var(--panel); color:var(--txt);
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px 16px 14px; width:min(440px, 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,.22);
+}
+.dlg-card h2{font-size:16px; margin:0 0 4px; font-weight:700}
+.dlg-hint{font-size:12px; color:var(--txt-dim); margin:0 0 12px; line-height:1.45}
+.dlg-card label{
+  display:block; font-size:12px; font-weight:700; color:var(--txt-dim);
+  text-transform:uppercase; letter-spacing:.06em; margin:12px 0 5px;
+}
+.dlg-card input[type=text]{
+  width:100%; background:var(--panel-2); border:1px solid var(--line);
+  border-radius:8px; padding:9px 10px; min-height:38px;
+}
+.dlg-card input[type=text]:focus{outline:2px solid var(--acc); outline-offset:0; border-color:var(--acc)}
+.dlg-modes{display:flex; flex-direction:column; gap:6px}
+.dlg-mode{
+  text-align:left; border:1px solid var(--line); background:var(--panel-2);
+  border-radius:8px; padding:10px 12px; min-height:44px; cursor:pointer;
+  font-weight:600; line-height:1.3;
+}
+.dlg-mode small{display:block; font-weight:500; color:var(--txt-dim); font-size:12px; margin-top:2px}
+.dlg-mode.on{background:var(--acc-soft); border-color:var(--acc); box-shadow:inset 0 0 0 1px var(--acc)}
+.dlg-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; justify-content:flex-end}
+.dlg-actions #tn-clear{margin-right:auto}
+.dlg-actions .btn.primary{
+  background:var(--acc); border-color:var(--acc); color:#fff; font-weight:700;
+}
 
 /* ───────── Reiterleiste S / O / A / P / FM ───────── */
 nav{
@@ -322,6 +364,7 @@ footer{
     <button class="segb on" data-g="Patient">M</button>
     <button class="segb" data-g="Patientin">W</button>
   </span>
+  <button class="btn" id="teilnehmer" title="Teilnehmer der Visite – bleibt beim Zurücksetzen erhalten">Teilnehmer</button>
   <span class="sp"></span>
   <button class="btn" id="modus" title="Ausgabeformat umschalten">Fließtext</button>
   <button class="btn" id="reset">Zurücksetzen</button>
@@ -346,6 +389,32 @@ footer{
   <div id="out" contenteditable="true"></div>
 </footer>
 <div id="stage" contenteditable="true"></div>
+
+<!-- Teilnehmer: Overlay über der Visite, nicht über dem Baustein-Editor -->
+<div id="tn-dlg" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="tn-titel">
+  <div class="dlg-card">
+    <h2 id="tn-titel">Teilnehmer der Visite</h2>
+    <p class="dlg-hint">Bleibt beim Zurücksetzen erhalten. Erst ein Neuladen der Datei setzt die Angabe zurück.</p>
+    <div class="dlg-modes" id="tn-modes">
+      <button type="button" class="dlg-mode on" data-art="namen">
+        Reguläre Visite
+        <small>Chirurgische Visite vom … · Teilnehmer: …</small>
+      </button>
+      <button type="button" class="dlg-mode" data-art="oa">
+        Oberarzt-/Chefarztvisite
+        <small>Chirurgische Oberarzt/Chefarztvisite vom … mit …</small>
+      </button>
+    </div>
+    <label id="tn-lab" for="tn-text">Teilnehmer</label>
+    <input type="text" id="tn-text" autocomplete="off" spellcheck="false"
+           placeholder="z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier">
+    <div class="dlg-actions">
+      <button type="button" class="btn" id="tn-clear">Leeren</button>
+      <button type="button" class="btn" id="tn-cancel">Abbrechen</button>
+      <button type="button" class="btn primary" id="tn-ok">Übernehmen</button>
+    </div>
+  </div>
+</div>
 
 <!-- Baustein-Editor: vollflächig über der Anwendung -->
 <div id="editor" aria-hidden="true">
@@ -1572,7 +1641,9 @@ M:{ name:"Fremdmaterial", gruppen:[
 
 /* ═════════════════════════════ ZUSTAND ═══════════════════════════════════
    Alles, was gerade angeklickt ist, steht in "gewaehlt". Nichts davon wird
-   gespeichert – beim Neuladen ist alles weg (siehe Datenschutz im README). */
+   gespeichert – beim Neuladen ist alles weg (siehe Datenschutz im README).
+   Ausnahme: die Teilnehmer der Visite überleben „Zurücksetzen", damit man
+   eine Runde lang denselben Stab nicht jedes Mal neu eintippen muss.       */
 
 const REITER = ["S","O","A","P","M"];
 
@@ -1586,6 +1657,8 @@ let   reiter   = "S";          // welcher Reiter gerade offen ist
 let   fliesstext = true;       // true = Fließtext, false = Stichpunkte
 let   anrede   = "Patient";    // Schalter M/W
 let   handBearbeitet = false;  // Vorschau manuell getippt (bis nächster Baustein-Klick)
+let   teilnehmerArt  = "namen"; // "namen" | "oa" – überlebt Zurücksetzen
+let   teilnehmerText = "";      // Freitext – überlebt Zurücksetzen, nicht das Neuladen
 
 /* Jeder Baustein bekommt eine eindeutige Kennung aus Reiter, Gruppe und
    Position – z.B. "O1_3". Sie wird nur intern verwendet.                   */
@@ -2011,13 +2084,44 @@ function datumText(){
   return `${t}.${m}.${j}`;
 }
 
+const teilnehmerGesetzt = () => !!(teilnehmerText || "").trim() || teilnehmerArt === "oa";
+
+/* Kopf der Dokumentation: Visitenart, Datum, optional Teilnehmer.
+   Die Teilnehmerangabe hängt nicht am Formularstand und bleibt deshalb
+   beim Zurücksetzen stehen.                                                */
+function kopfzeilen(){
+  const datum = datumText();
+  const namen = (teilnehmerText || "").trim();
+  if(teilnehmerArt === "oa"){
+    return [namen
+      ? "Chirurgische Oberarzt/Chefarztvisite vom " + datum + " mit " + namen
+      : "Chirurgische Oberarzt/Chefarztvisite vom " + datum];
+  }
+  const kopf = ["Chirurgische Visite vom " + datum];
+  if(namen) kopf.push("Teilnehmer: " + namen);
+  return kopf;
+}
+
+function aktualisiereTeilnehmerKnopf(){
+  const knopf = $("#teilnehmer");
+  const an = teilnehmerGesetzt();
+  knopf.classList.toggle("on", an);
+  knopf.title = an
+    ? (teilnehmerArt === "oa"
+        ? "Oberarzt-/Chefarztvisite mit " + ((teilnehmerText || "").trim() || "…")
+            + " – bleibt beim Zurücksetzen erhalten"
+        : "Teilnehmer: " + (teilnehmerText || "").trim()
+            + " – bleibt beim Zurücksetzen erhalten")
+    : "Teilnehmer der Visite – bleibt beim Zurücksetzen erhalten";
+}
+
 /* Genau ein Satzpunkt, auch wenn die Eingabe selbst auf einen Punkt endet
    (z.B. ein Datum wie "01.08.").                                           */
 const mitPunkt = x => x.replace(/\.+$/, "") + ".";
 
 /* Der vollständige Text. Im Fließtext-Modus ohne Leerzeilen. */
 function ganzerText(){
-  const zeilen = ["Chirurgische Visite vom " + datumText()];
+  const zeilen = kopfzeilen();
   if(!fliesstext) zeilen.push("");
 
   ["S","O","A","P"].forEach(r => {
@@ -2052,10 +2156,13 @@ function ganzerText(){
 /* Fassung für die Zwischenablage: <div> je Zeile, erste Zeile fett und
    unterstrichen. So kommt die Formatierung im KIS an.                      */
 function alsHTML(t){
-  let kopf = false;
+  let kopf = true, erste = true;
   return t.split("\n").map(z => {
-    if(!z.trim()) return "<div><br></div>";
-    if(!kopf){ kopf = true; return `<div><b><u>${esc(z)}</u></b></div>`; }
+    if(!z.trim()){ kopf = false; return "<div><br></div>"; }
+    const alsKopf = kopf && (erste || /^Teilnehmer:/.test(z));
+    erste = false;
+    if(!alsKopf) kopf = false;
+    if(alsKopf) return `<div><b><u>${esc(z)}</u></b></div>`;
     return `<div>${esc(z)}</div>`;
   }).join("");
 }
@@ -2065,10 +2172,13 @@ function alsHTML(t){
    Lücken entsteht erst nach dem Schützen und bleibt dadurch auf die
    Anzeige beschränkt – sie landet nie in der Zwischenablage.               */
 function alsAnzeige(t){
-  let kopf = false;
+  let kopf = true, erste = true;
   return t.split("\n").map(z => {
-    if(!z.trim()) return "";
-    if(!kopf){ kopf = true; return `<span class="h">${esc(z)}</span>`; }
+    if(!z.trim()){ kopf = false; return ""; }
+    const alsKopf = kopf && (erste || /^Teilnehmer:/.test(z));
+    erste = false;
+    if(!alsKopf) kopf = false;
+    if(alsKopf) return `<span class="h">${esc(z)}</span>`;
     return esc(z);
   }).join("\n").replace(/___/g, '<span class="gap">___</span>');
 }
@@ -2203,6 +2313,72 @@ $("#reset").addEventListener("click", () => {
 });
 
 $("#datum").addEventListener("change", aktualisiere);
+
+/* ═════════════════════════ TEILNEHMER ═══════════════════════════════════
+   Eingabe über den Kopfzeilen-Knopf. Der Text hängt nicht am Formular,
+   deshalb bleibt er beim Zurücksetzen stehen – erst Neuladen leert ihn.   */
+
+function tnDialogArt(){
+  const an = $("#tn-modes").querySelector(".dlg-mode.on");
+  return (an && an.dataset.art) || "namen";
+}
+
+function tnDialogBeschriftung(){
+  const oa = tnDialogArt() === "oa";
+  $("#tn-lab").textContent = oa ? "mit" : "Teilnehmer";
+  $("#tn-text").placeholder = oa
+    ? "z. B. OA Dr. Müller"
+    : "z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier";
+}
+
+function oeffneTeilnehmer(){
+  $("#tn-modes").querySelectorAll(".dlg-mode").forEach(b =>
+    b.classList.toggle("on", b.dataset.art === teilnehmerArt));
+  $("#tn-text").value = teilnehmerText;
+  tnDialogBeschriftung();
+  $("#tn-dlg").hidden = false;
+  $("#tn-text").focus();
+  $("#tn-text").select();
+}
+
+function schliesseTeilnehmer(){
+  $("#tn-dlg").hidden = true;
+}
+
+function uebernehmeTeilnehmer(){
+  teilnehmerArt = tnDialogArt();
+  teilnehmerText = $("#tn-text").value.trim();
+  schliesseTeilnehmer();
+  aktualisiereTeilnehmerKnopf();
+  aktualisiere();
+}
+
+function leereTeilnehmer(){
+  teilnehmerArt = "namen";
+  teilnehmerText = "";
+  schliesseTeilnehmer();
+  aktualisiereTeilnehmerKnopf();
+  aktualisiere();
+}
+
+$("#teilnehmer").addEventListener("click", oeffneTeilnehmer);
+$("#tn-ok").addEventListener("click", uebernehmeTeilnehmer);
+$("#tn-cancel").addEventListener("click", schliesseTeilnehmer);
+$("#tn-clear").addEventListener("click", leereTeilnehmer);
+$("#tn-modes").addEventListener("click", e => {
+  const b = e.target.closest(".dlg-mode");
+  if(!b) return;
+  $("#tn-modes").querySelectorAll(".dlg-mode").forEach(c =>
+    c.classList.toggle("on", c === b));
+  tnDialogBeschriftung();
+  $("#tn-text").focus();
+});
+$("#tn-dlg").addEventListener("click", e => {
+  if(e.target.id === "tn-dlg") schliesseTeilnehmer();
+});
+$("#tn-text").addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); uebernehmeTeilnehmer(); }
+});
 
 /* Höhe der Vorschau per Griffleiste ziehen – mit Maus, Stift und Finger. */
 (function(){
@@ -2765,6 +2941,11 @@ function zwischenstandAnwenden(stand){
 
 document.addEventListener("keydown", e => {
   if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); kopiere(); }
+  if(e.key === "Escape" && !$("#tn-dlg").hidden){
+    e.preventDefault();
+    schliesseTeilnehmer();
+    return;
+  }
   if(e.key === "Escape" && $("#editor").classList.contains("open")){
     e.preventDefault();
     schliesseEditor();
@@ -2775,7 +2956,7 @@ document.addEventListener("keydown", e => {
    eine Visite erfasst ist oder Baustein-Änderungen noch nicht in HTML
    geschrieben wurden. Der Datei-Download löst das nicht aus.               */
 window.addEventListener("beforeunload", e => {
-  if(bausteineGeaendert || handBearbeitet || !nichtsGewaehlt()){
+  if(bausteineGeaendert || handBearbeitet || !nichtsGewaehlt() || teilnehmerGesetzt()){
     e.preventDefault();
     e.returnValue = "";
   }
@@ -2790,6 +2971,7 @@ window.addEventListener("beforeunload", e => {
                     + String(d.getMonth() + 1).padStart(2, "0") + "-"
                     + String(d.getDate()).padStart(2, "0");
   pruefeBausteine();
+  aktualisiereTeilnehmerKnopf();
   zeichne(false);
 })();
 </script>
