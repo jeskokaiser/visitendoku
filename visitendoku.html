@@ -2168,13 +2168,10 @@ function ganzerText(){
 /* Fassung für die Zwischenablage: <div> je Zeile, erste Zeile fett und
    unterstrichen. So kommt die Formatierung im KIS an.                      */
 function alsHTML(t){
-  let kopf = true, erste = true;
+  let kopf = false;
   return t.split("\n").map(z => {
-    if(!z.trim()){ kopf = false; return "<div><br></div>"; }
-    const alsKopf = kopf && (erste || /^Teilnehmer:/.test(z));
-    erste = false;
-    if(!alsKopf) kopf = false;
-    if(alsKopf) return `<div><b><u>${esc(z)}</u></b></div>`;
+    if(!z.trim()) return "<div><br></div>";
+    if(!kopf){ kopf = true; return `<div><b><u>${esc(z)}</u></b></div>`; }
     return `<div>${esc(z)}</div>`;
   }).join("");
 }
@@ -2184,13 +2181,10 @@ function alsHTML(t){
    Lücken entsteht erst nach dem Schützen und bleibt dadurch auf die
    Anzeige beschränkt – sie landet nie in der Zwischenablage.               */
 function alsAnzeige(t){
-  let kopf = true, erste = true;
+  let kopf = false;
   return t.split("\n").map(z => {
-    if(!z.trim()){ kopf = false; return ""; }
-    const alsKopf = kopf && (erste || /^Teilnehmer:/.test(z));
-    erste = false;
-    if(!alsKopf) kopf = false;
-    if(alsKopf) return `<span class="h">${esc(z)}</span>`;
+    if(!z.trim()) return "";
+    if(!kopf){ kopf = true; return `<span class="h">${esc(z)}</span>`; }
     return esc(z);
   }).join("\n").replace(/___/g, '<span class="gap">___</span>');
 }
