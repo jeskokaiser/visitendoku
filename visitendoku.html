@@ -116,6 +116,8 @@ header .sp{flex:1}
 }
 .dlg-card input[type=text]:focus{outline:2px solid var(--acc); outline-offset:0; border-color:var(--acc)}
 .dlg-modes{display:flex; flex-direction:column; gap:6px}
+.dlg-modes-row{display:flex; gap:6px}
+.dlg-modes-row .dlg-mode{flex:1}
 .dlg-mode{
   text-align:left; border:1px solid var(--line); background:var(--panel-2);
   border-radius:8px; padding:10px 12px; min-height:44px; cursor:pointer;
@@ -400,10 +402,16 @@ footer{
         Reguläre Visite
         <small>Chirurgische Visite vom … · Teilnehmer: …</small>
       </button>
-      <button type="button" class="dlg-mode" data-art="oa">
-        Oberarzt-/Chefarztvisite
-        <small>Chirurgische Oberarzt/Chefarztvisite vom … mit …</small>
-      </button>
+      <div class="dlg-modes-row">
+        <button type="button" class="dlg-mode" data-art="oa">
+          Oberarztvisite
+          <small>… Oberarztvisite vom … mit …</small>
+        </button>
+        <button type="button" class="dlg-mode" data-art="ca">
+          Chefarztvisite
+          <small>… Chefarztvisite vom … mit …</small>
+        </button>
+      </div>
     </div>
     <label id="tn-lab" for="tn-text">Teilnehmer</label>
     <input type="text" id="tn-text" autocomplete="off" spellcheck="false"
@@ -1657,7 +1665,7 @@ let   reiter   = "S";          // welcher Reiter gerade offen ist
 let   fliesstext = true;       // true = Fließtext, false = Stichpunkte
 let   anrede   = "Patient";    // Schalter M/W
 let   handBearbeitet = false;  // Vorschau manuell getippt (bis nächster Baustein-Klick)
-let   teilnehmerArt  = "namen"; // "namen" | "oa" – überlebt Zurücksetzen
+let   teilnehmerArt  = "namen"; // "namen" | "oa" | "ca" – überlebt Zurücksetzen
 let   teilnehmerText = "";      // Freitext – überlebt Zurücksetzen, nicht das Neuladen
 
 /* Jeder Baustein bekommt eine eindeutige Kennung aus Reiter, Gruppe und
@@ -2084,7 +2092,9 @@ function datumText(){
   return `${t}.${m}.${j}`;
 }
 
-const teilnehmerGesetzt = () => !!(teilnehmerText || "").trim() || teilnehmerArt === "oa";
+const istLeitungsvisite = art => art === "oa" || art === "ca";
+const visitenartName = art => art === "oa" ? "Oberarztvisite" : art === "ca" ? "Chefarztvisite" : "Visite";
+const teilnehmerGesetzt = () => !!(teilnehmerText || "").trim() || istLeitungsvisite(teilnehmerArt);
 
 /* Kopf der Dokumentation: Visitenart, Datum, optional Teilnehmer.
    Die Teilnehmerangabe hängt nicht am Formularstand und bleibt deshalb
@@ -2092,10 +2102,11 @@ const teilnehmerGesetzt = () => !!(teilnehmerText || "").trim() || teilnehmerArt
 function kopfzeilen(){
   const datum = datumText();
   const namen = (teilnehmerText || "").trim();
-  if(teilnehmerArt === "oa"){
+  if(istLeitungsvisite(teilnehmerArt)){
+    const art = visitenartName(teilnehmerArt);
     return [namen
-      ? "Chirurgische Oberarzt/Chefarztvisite vom " + datum + " mit " + namen
-      : "Chirurgische Oberarzt/Chefarztvisite vom " + datum];
+      ? "Chirurgische " + art + " vom " + datum + " mit " + namen
+      : "Chirurgische " + art + " vom " + datum];
   }
   const kopf = ["Chirurgische Visite vom " + datum];
   if(namen) kopf.push("Teilnehmer: " + namen);
@@ -2106,11 +2117,12 @@ function aktualisiereTeilnehmerKnopf(){
   const knopf = $("#teilnehmer");
   const an = teilnehmerGesetzt();
   knopf.classList.toggle("on", an);
+  const namen = (teilnehmerText || "").trim();
   knopf.title = an
-    ? (teilnehmerArt === "oa"
-        ? "Oberarzt-/Chefarztvisite mit " + ((teilnehmerText || "").trim() || "…")
+    ? (istLeitungsvisite(teilnehmerArt)
+        ? visitenartName(teilnehmerArt) + " mit " + (namen || "…")
             + " – bleibt beim Zurücksetzen erhalten"
-        : "Teilnehmer: " + (teilnehmerText || "").trim()
+        : "Teilnehmer: " + namen
             + " – bleibt beim Zurücksetzen erhalten")
     : "Teilnehmer der Visite – bleibt beim Zurücksetzen erhalten";
 }
@@ -2156,13 +2168,10 @@ function ganzerText(){
 /* Fassung für die Zwischenablage: <div> je Zeile, erste Zeile fett und
    unterstrichen. So kommt die Formatierung im KIS an.                      */
 function alsHTML(t){
-  let kopf = true, erste = true;
+  let kopf = false;
   return t.split("\n").map(z => {
-    if(!z.trim()){ kopf = false; return "<div><br></div>"; }
-    const alsKopf = kopf && (erste || /^Teilnehmer:/.test(z));
-    erste = false;
-    if(!alsKopf) kopf = false;
-    if(alsKopf) return `<div><b><u>${esc(z)}</u></b></div>`;
+    if(!z.trim()) return "<div><br></div>";
+    if(!kopf){ kopf = true; return `<div><b><u>${esc(z)}</u></b></div>`; }
     return `<div>${esc(z)}</div>`;
   }).join("");
 }
@@ -2172,13 +2181,10 @@ function alsHTML(t){
    Lücken entsteht erst nach dem Schützen und bleibt dadurch auf die
    Anzeige beschränkt – sie landet nie in der Zwischenablage.               */
 function alsAnzeige(t){
-  let kopf = true, erste = true;
+  let kopf = false;
   return t.split("\n").map(z => {
-    if(!z.trim()){ kopf = false; return ""; }
-    const alsKopf = kopf && (erste || /^Teilnehmer:/.test(z));
-    erste = false;
-    if(!alsKopf) kopf = false;
-    if(alsKopf) return `<span class="h">${esc(z)}</span>`;
+    if(!z.trim()) return "";
+    if(!kopf){ kopf = true; return `<span class="h">${esc(z)}</span>`; }
     return esc(z);
   }).join("\n").replace(/___/g, '<span class="gap">___</span>');
 }
@@ -2324,11 +2330,14 @@ function tnDialogArt(){
 }
 
 function tnDialogBeschriftung(){
-  const oa = tnDialogArt() === "oa";
-  $("#tn-lab").textContent = oa ? "mit" : "Teilnehmer";
-  $("#tn-text").placeholder = oa
-    ? "z. B. OA Dr. Müller"
-    : "z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier";
+  const art = tnDialogArt();
+  const leitung = istLeitungsvisite(art);
+  $("#tn-lab").textContent = leitung ? "mit" : "Teilnehmer";
+  $("#tn-text").placeholder = art === "ca"
+    ? "z. B. CA Prof. Meier"
+    : art === "oa"
+      ? "z. B. OA Dr. Müller"
+      : "z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier";
 }
 
 function oeffneTeilnehmer(){
