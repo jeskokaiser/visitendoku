@@ -506,7 +506,9 @@ let SELF = dateiKopfVorHtml() + document.documentElement.outerHTML;
 const originalQuelleBereit = fetch(location.href, { cache:"no-store" })
   .then(r => r.ok ? r.text() : "")
   .then(t => {
-    if(t.includes("/*@@BAUSTEINE_BEGIN@@*/") && t.includes("/*@@BAUSTEINE_END@@*/"))
+    /* Marker bewusst zerlegt, damit htmlMitAktuellenBausteinen() nicht
+       diese Zeile statt des echten Katalogblocks trifft. */
+    if(t.includes("@@BAUSTEINE_BEGIN@@") && t.includes("@@BAUSTEINE_END@@"))
       SELF = t;
   })
   .catch(() => {});
@@ -2458,12 +2460,24 @@ function bausteineAlsQuelltext(){
        + ";\n" + BAUSTEINE_MARK_B;
 }
 
+function bausteineBlockGrenzen(html){
+  /* Der Katalog steht als `const BAUSTEINE = …` direkt hinter der Begin-Marke.
+     Dieselbe Marke kommt zusätzlich in Prüfungen und Konstanten vor – dort
+     ohne nachfolgendes `const BAUSTEINE`. Nur diese Folge ist eindeutig. */
+  const start = BAUSTEINE_MARK_A + "\nconst BAUSTEINE";
+  const a = html.indexOf(start);
+  if(a < 0) return null;
+  const b = html.indexOf(BAUSTEINE_MARK_B, a + BAUSTEINE_MARK_A.length);
+  if(b < 0) return null;
+  return { a, b };
+}
+
 function htmlMitAktuellenBausteinen(){
-  const a = SELF.indexOf(BAUSTEINE_MARK_A);
-  const b = SELF.indexOf(BAUSTEINE_MARK_B);
-  if(a < 0 || b < 0 || b < a)
+  const grenzen = bausteineBlockGrenzen(SELF);
+  if(!grenzen)
     throw new Error("Speichermarkierungen in der Datei fehlen.");
-  return SELF.slice(0, a) + bausteineAlsQuelltext() + SELF.slice(b + BAUSTEINE_MARK_B.length);
+  return SELF.slice(0, grenzen.a) + bausteineAlsQuelltext()
+       + SELF.slice(grenzen.b + BAUSTEINE_MARK_B.length);
 }
 
 async function speichereHTML(){
