@@ -699,8 +699,8 @@ const originalQuelleBereit = fetch(location.href, { cache:"no-store" })
 
 const SEITE  = ["rechts", "links", "beidseits"];
 
-const SEKRET = ["serös", "serosanguinös", "blutig", "altblutig", "gallig",
-                "trüb", "putride", "chylös", "enteral"];
+const SEKRET = ["serös", "serös-blutig", "blutig", "altblutig", "serös umgeschlagen",
+                "trüb", "putride"];
 
 /* "Drainage" steht bewusst an erster Stelle und ist die Vorgabe:
    ein Klick genügt, die genaue Art ist eine Verfeinerung. */
@@ -721,7 +721,7 @@ const FELD_PLAN = { name:"plan", art:"auswahl", titel:"Planung",
   ["heute entfernen",  "wird heute entfernt"],
   ["morgen entfernen", "wird morgen entfernt"],
   ["wechseln",         "wird gewechselt"],
-  ["belassen",         "bleibt vorerst belassen"]
+  ["belassen",         "vorerst belassen"]
 ]};
 
 
@@ -745,9 +745,9 @@ S:{ name:"Subjektiv", gruppen:[
   { gruppe:"Allgemein", bausteine:[
 
     { knopf:"Befinden", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"{P} fühlt sich wohl", optionen:[
-        ["wohl",         "{P} fühlt sich wohl"],
-        ["gebessert",    "Subjektiv deutlich gebessert"],
+      { name:"z", art:"auswahl", vorgabe:"{P} gibt subjektives Wohlbefinden an", optionen:[
+        ["wohl",         "{P} gibt subjektives Wohlbefinden an"],
+        ["gebessert",    "{P} fühl sich deutlich besser"],
         ["unverändert",  "Befinden unverändert zum Vortag"],
         ["reduziert",    "Reduziertes Allgemeinbefinden"],
         ["abgeschlagen", "{P} klagt über Abgeschlagenheit und Müdigkeit"]
@@ -759,7 +759,7 @@ S:{ name:"Subjektiv", gruppen:[
         ["liegend",          "liegend im Bett"],
         ["sitzend im Bett",  "sitzend im Bett"],
         ["sitzend am Tisch", "sitzend am Tisch"],
-        ["stehend",          "stehend am Bett"]
+        ["stehend",          "stehend"]
       ]}
     ]},
 
@@ -791,7 +791,7 @@ S:{ name:"Subjektiv", gruppen:[
         ["Bauch",     "Bauchschmerzen"],
         ["Rücken",    "Rückenschmerzen"],
         ["Schulter",  "Schulterschmerzen"],
-        ["Flanke",    "Flankenschmerzen"],
+        ["Steiß",    "Steißchmerzen"],
         ["Thorax",    "Thoraxschmerzen"],
         ["Bein",      "Beinschmerzen"],
         ["Kopf",      "Kopfschmerzen"]
@@ -862,8 +862,8 @@ S:{ name:"Subjektiv", gruppen:[
     { knopf:"Kost", satz:"{z}", felder:[
       { name:"z", art:"auswahl", vorgabe:"Kost wird gut vertragen", optionen:[
         ["wird vertragen",   "Kost wird gut vertragen"],
-        ["Aufbau problemlos","Kostaufbau verläuft problemlos"],
-        ["Trinken",          "Trinken wird vertragen"],
+        ["Aufbau problemlos", "Kostaufbau verläuft problemlos"],
+        ["Aufbau langsam", "Kostaufbau langsam möglich"],
         ["nicht vertragen",  "Kost wird nicht vertragen"],
         ["Appetit reduziert","Appetit reduziert"],
         ["nüchtern",         "Aktuell nüchtern"]
@@ -955,32 +955,30 @@ O:{ name:"Objektiv", gruppen:[
       { name:"z", art:"auswahl", vorgabe:"weich", optionen:[
         ["weich",        "weich"],
         ["adipös, weich","adipös und weich"],
-        ["gebläht",      "gebläht und meteoristisch"],
+        ["gebläht",      "gebläht"],
         ["gespannt",     "gespannt"]
       ]}
     ]},
 
-    { knopf:"Druckschmerz", satz:"{z}{f}", felder:[
-      { name:"f", art:"text", hinweis:"Ergänzung", freiwillig:true, davor:", ", breit:true },
+    { knopf:"Druckschmerz", satz:"{z}{f}{s}", felder:[
+      { name:"f", art:"text", hinweis:"Ergänzung", freiwillig:true, davor:", ", breit:true }, 
       { name:"z", art:"auswahl", vorgabe:"Kein Druckschmerz",
         eigeneEingabe:true, optionen:[
         ["kein",          "Kein Druckschmerz"],
         ["OP-Gebiet",     "Druckschmerz im OP-Gebiet"],
-        ["Oberbauch re.", "Druckschmerz im rechten Oberbauch"],
-        ["Oberbauch li.", "Druckschmerz im linken Oberbauch"],
-        ["Unterbauch re.","Druckschmerz im rechten Unterbauch"],
-        ["Unterbauch li.","Druckschmerz im linken Unterbauch"],
+        ["Oberbauch", "Druckschmerz im Oberbauch"],
+        ["Unterbauch","Druckschmerz im  Unterbauch"],
         ["Mittelbauch",   "Druckschmerz im Mittelbauch"],
         ["epigastrisch",  "Druckschmerz epigastrisch"],
         ["diffus",        "Druckschmerz über dem gesamten Abdomen"]
-      ]}
+      ]}, FELD_SEITE
     ]},
 
-    { knopf:"Peritonismus", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Kein Peritonismus, keine Abwehrspannung", optionen:[
-        ["kein",          "Kein Peritonismus, keine Abwehrspannung"],
-        ["Abwehrspannung","Abwehrspannung"],
-        ["Loslassschmerz","Loslassschmerz"]
+    { knopf:"Abwehrspannung", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Keine Abwehrspannung", optionen:[
+        ["kein",          "Keine Abwehrspannung"],
+        ["leicht",  "Leichte Abwehrspannung"],
+        ["stark", "Starke Abwehrspannung"]
       ]}
     ]},
 
@@ -988,6 +986,7 @@ O:{ name:"Objektiv", gruppen:[
       { name:"z", art:"auswahl",
         vorgabe:"Darmgeräusche über allen vier Quadranten regelrecht", optionen:[
         ["regelrecht",   "Darmgeräusche über allen vier Quadranten regelrecht"],
+        ["reduziert",   "Darmgeräusche über allen vier Quadranten vorhanden, jedoch reduziert"],
         ["spärlich",     "Spärliche Darmgeräusche"],
         ["keine",        "Keine Darmgeräusche auskultierbar"],
         ["hochgestellt", "Hochgestellte Darmgeräusche"]
@@ -997,6 +996,18 @@ O:{ name:"Objektiv", gruppen:[
     { knopf:"Bruchpforten frei", satz:"Bruchpforten frei" },
 
     { knopf:"Beide Hoden im Skrotum", satz:"Beide Hoden regelrecht im Skrotum tastbar" },
+
+    { knopf:"Hämatome", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Kein Hämatom",
+        eigeneEingabe:true, optionen:[
+        ["kein",       "Kein Hämatom"],
+        ["Leiste ",   "Leistenhämtom"],
+        ["Periumbilikal",   "Periumbilikalhämatom"],
+        ["Supraumbilikal",  "Supraumbilikalhämatom"],
+        ["Infraumbilikal", "Infraumbilikalhämatom"],
+        ["Skrotal",    "Skrotalhämatom"]
+      ]}
+      ]},
 
     { knopf:"Rektal digital", satz:"Digital-rektale Untersuchung {z}", felder:[
       { name:"z", art:"auswahl", vorgabe:"ohne pathologischen Befund",
@@ -1017,9 +1028,9 @@ O:{ name:"Objektiv", gruppen:[
     { knopf:"Wunde", satz:"{z}{n}{q}", felder:[
       { name:"n", art:"zahl", hinweis:"cm",
         freiwillig:true, davor:" auf ", danach:" cm Länge" },
-      { name:"z", art:"auswahl", vorgabe:"Wundverhältnisse reizlos und trocken", optionen:[
-        ["reizlos",  "Wundverhältnisse reizlos und trocken"],
-        ["Rötung",   "Diskrete Rötung der Wundränder ohne Sekretion"],
+      { name:"z", art:"auswahl", vorgabe:"Wundverhältnisse reizlos", optionen:[
+        ["reizlos",  "Wundverhältnisse reizlos"],
+        ["Rötung",   "Diskrete Rötung der Wundränder"],
         ["Infekt",   "Gerötete, überwärmte Wunde mit putrider Sekretion"],
         ["Dehiszenz","Wunddehiszenz"],
         ["Serom",    "Tastbares Serom im Wundbereich"],
@@ -1034,7 +1045,8 @@ O:{ name:"Objektiv", gruppen:[
         ["trocken",      "Verband trocken und sauber"],
         ["altblutig",    "Pflaster altblutig durchgeschlagen"],
         ["frisch blutig","Pflaster frisch blutig durchgeschlagen"],
-        ["serös",        "Pflaster serös durchgeschlagen"]
+        ["serös",        "Pflaster serös durchgeschlagen"],
+        ["blutig-serös",        "Pflaster blutig-serös durchgeschlagen"]
       ]}
     ]},
 
