@@ -1,0 +1,3000 @@
+<!DOCTYPE html>
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  VISITENDOKUMENTATION ALLGEMEINCHIRURGIE
+  ════════════════════════════════════════════════════════════════════════════
+  Erstellt durch: Jesko Kaiser; mail@jeskokaiser.de
+
+  Eine einzige Datei. Kein Server, kein Internet, keine Installation.
+  Öffnen per Doppelklick oder auf einen Webspace legen – das war es.
+
+  ANPASSEN
+  Die Bausteine lassen sich über „Bausteine bearbeiten" in der Oberfläche
+  ändern und mit „HTML speichern" als Datei auf dem PC ablegen.
+  Alternativ stehen sie weiter unten im Abschnitt "BAUSTEINE" und können
+  im Texteditor angepasst werden (Anleitung mit Beispielen darüber).
+
+  AUFBAU DIESER DATEI
+    1. <style>   – das Aussehen (Farben, Abstände)
+    2. <body>    – das Grundgerüst der Seite
+    3. Script 1  – Fehlerwächter: meldet Tippfehler mit Zeilennummer
+    4. Script 2  – ANLEITUNG + BAUSTEINE  ← hier wird angepasst
+                   darunter die Programmlogik – die bleibt normalerweise unberührt
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visitendokumentation Allgemeinchirurgie</title>
+<style>
+/* ───────── Farben und Maße an einer Stelle ─────────
+   Hier lässt sich das gesamte Aussehen umstellen.
+   --acc  ist die Signalfarbe (Reiter, aktive Knöpfe, Kopieren-Schaltfläche)
+   --tap  ist die Mindesthöhe der Bausteine – nicht unter 44 px, sonst
+          trifft man sie auf dem Tablet nicht mehr zuverlässig.            */
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --panel-2:#eef2f6; --line:#d6dee7;
+  --txt:#16202b; --txt-dim:#5d6b7a;
+  --acc:#0b6bcb; --acc-soft:#e3f0ff; --acc-line:#8dc0f2;
+  --ok:#0f7b52; --warn:#a8580a;
+  --radius:11px;
+  --tap:46px;
+}
+/* Dunkles Design – greift automatisch je nach Systemeinstellung */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#10151b; --panel:#18202a; --panel-2:#1f2937; --line:#2f3d4d;
+    --txt:#e6edf4; --txt-dim:#94a5b8;
+    --acc:#4d9bf0; --acc-soft:#12324f; --acc-line:#2f6fae;
+    --ok:#3fbf8f; --warn:#e0a04a;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--txt);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  display:flex; flex-direction:column; overflow:hidden;
+  height:100vh; height:100dvh;   /* vh als Rückfallebene für ältere Browser */
+  -webkit-text-size-adjust:100%;
+}
+button,input,textarea{font:inherit; color:inherit}
+
+/* ───────── Kopfzeile: Datum, M/W, Schaltflächen ───────── */
+header{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding-top:calc(8px + env(safe-area-inset-top));
+}
+header h1{font-size:16px; margin:0; font-weight:700; letter-spacing:-.01em; white-space:nowrap}
+header .sp{flex:1}
+#datum{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+  padding:8px 10px; min-height:38px;
+}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.segb{
+  min-width:44px; min-height:38px; border:0; border-right:1px solid var(--line);
+  background:var(--panel-2); cursor:pointer; font-weight:800; letter-spacing:.02em;
+}
+.segb:last-child{border-right:0}
+.segb.on{background:var(--acc); color:#fff}
+.btn{
+  border:1px solid var(--line); background:var(--panel-2); border-radius:8px;
+  padding:8px 12px; min-height:38px; cursor:pointer; white-space:nowrap;
+}
+.btn:hover{border-color:var(--acc-line)}
+.btn:active{transform:translateY(1px)}
+#teilnehmer.on{
+  background:var(--acc); color:#fff; border-color:var(--acc);
+}
+
+/* Dialog: Teilnehmer der Visite */
+.dlg{
+  position:fixed; inset:0; z-index:700;
+  background:rgba(16,21,27,.45);
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:max(24px, 8vh) 16px 16px;
+}
+.dlg[hidden]{display:none !important}
+.dlg-card{
+  background:var(--panel); color:var(--txt);
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px 16px 14px; width:min(440px, 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,.22);
+}
+.dlg-card h2{font-size:16px; margin:0 0 4px; font-weight:700}
+.dlg-hint{font-size:12px; color:var(--txt-dim); margin:0 0 12px; line-height:1.45}
+.dlg-card label{
+  display:block; font-size:12px; font-weight:700; color:var(--txt-dim);
+  text-transform:uppercase; letter-spacing:.06em; margin:12px 0 5px;
+}
+.dlg-card input[type=text]{
+  width:100%; background:var(--panel-2); border:1px solid var(--line);
+  border-radius:8px; padding:9px 10px; min-height:38px;
+}
+.dlg-card input[type=text]:focus{outline:2px solid var(--acc); outline-offset:0; border-color:var(--acc)}
+.dlg-modes{display:flex; flex-direction:column; gap:6px}
+.dlg-modes-row{display:flex; gap:6px}
+.dlg-modes-row .dlg-mode{flex:1}
+.dlg-mode{
+  text-align:left; border:1px solid var(--line); background:var(--panel-2);
+  border-radius:8px; padding:10px 12px; min-height:44px; cursor:pointer;
+  font-weight:600; line-height:1.3;
+}
+.dlg-mode small{display:block; font-weight:500; color:var(--txt-dim); font-size:12px; margin-top:2px}
+.dlg-mode.on{background:var(--acc-soft); border-color:var(--acc); box-shadow:inset 0 0 0 1px var(--acc)}
+.dlg-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; justify-content:flex-end}
+.dlg-actions #tn-clear{margin-right:auto}
+.dlg-actions .btn.primary{
+  background:var(--acc); border-color:var(--acc); color:#fff; font-weight:700;
+}
+
+/* ───────── Reiterleiste S / O / A / P / FM ───────── */
+nav{
+  display:flex; gap:6px; padding:8px 12px; background:var(--bg);
+  border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none;
+}
+nav::-webkit-scrollbar{display:none}
+.tab{
+  flex:1 0 auto; min-width:96px; min-height:var(--tap);
+  border:1px solid var(--line); background:var(--panel); border-radius:var(--radius);
+  cursor:pointer; padding:6px 12px; display:flex; align-items:center; justify-content:center; gap:7px;
+  font-weight:600; color:var(--txt-dim);
+}
+.tab .k{font-size:17px; font-weight:800; color:var(--acc)}
+.tab[aria-selected="true"]{background:var(--acc-soft); border-color:var(--acc-line); color:var(--txt)}
+.tab .n{   /* die kleine Zahl: wie viele Bausteine in diesem Reiter aktiv sind */
+  min-width:21px; height:21px; padding:0 6px; border-radius:11px; background:var(--acc); color:#fff;
+  font-size:12px; font-weight:700; display:none; align-items:center; justify-content:center;
+}
+.tab .n.on{display:inline-flex}
+
+/* ───────── Bausteinbereich ───────── */
+main{flex:1; min-height:0; overflow-y:auto; padding:12px 12px 18px; -webkit-overflow-scrolling:touch}
+.grp{margin-bottom:16px}
+.grp > h2{   /* Gruppenüberschrift, z.B. "SCHMERZEN" */
+  font-size:12px; text-transform:uppercase; letter-spacing:.09em; color:var(--txt-dim);
+  margin:0 0 7px 2px; font-weight:700;
+}
+.chips{display:flex; flex-wrap:wrap; gap:7px}
+.chip{       /* ein Baustein */
+  display:inline-flex; align-items:center; flex-wrap:wrap; gap:6px;
+  min-height:var(--tap); padding:7px 14px;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:background .1s, border-color .1s;
+}
+.chip:hover{border-color:var(--acc-line)}
+.chip.on{background:var(--acc-soft); border-color:var(--acc); box-shadow:inset 0 0 0 1px var(--acc)}
+.chip.on .lbl{font-weight:600}
+.chip:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+.chip .f{    /* Eingabefeld für Zahlen und Text */
+  background:var(--panel); border:1px solid var(--acc-line); border-radius:7px;
+  padding:5px 7px; min-height:36px; width:66px; text-align:center;
+}
+.chip .f.w{width:170px; text-align:left}   /* breit:true  */
+.chip .f.s{width:120px; text-align:left}   /* mittel:true */
+.chip .f:focus{outline:2px solid var(--acc); outline-offset:0}
+.chip .f[type=number]{-moz-appearance:textfield}
+.chip .f[type=number]::-webkit-outer-spin-button,
+.chip .f[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.chip .cnt{font-size:12px; font-weight:800; color:var(--acc)}   /* "2×" bei Mehrfach-Einträgen */
+
+/* Auswahlreihen und Mehrfach-Einträge innerhalb eines Bausteins */
+.inst{flex-basis:100%; display:flex; flex-direction:column; gap:5px}
+.inst + .inst{border-top:1px solid var(--acc-line); padding-top:6px; margin-top:4px}
+.prow{
+  display:flex; flex-wrap:wrap; gap:5px; align-items:center;
+  border-top:1px dashed var(--acc-line); padding-top:7px;
+}
+.inst > .prow:first-child{border-top:0; padding-top:2px}
+.irow{display:flex; flex-wrap:wrap; gap:5px; align-items:center; padding-top:2px}
+.ihd{font-size:12px; color:var(--txt-dim); margin-right:2px; min-width:74px}
+.pill{       /* ein Auswahlknopf */
+  border:1px solid var(--line); background:var(--panel); border-radius:20px;
+  padding:6px 13px; min-height:36px; font-size:13px; cursor:pointer;
+  display:inline-flex; align-items:center; user-select:none;
+}
+.pill:hover{border-color:var(--acc-line)}
+.pill.on{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
+.pill.add{border-style:dashed; border-color:var(--acc-line); color:var(--acc); font-weight:600; flex-basis:100%; justify-content:center; margin-top:2px}
+.pill.del{color:var(--warn); font-weight:800; padding:6px 13px}
+
+.free{       /* Freitextfeld am Ende jedes Reiters */
+  width:100%; margin-top:4px; min-height:64px; resize:vertical;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px;
+}
+.free:focus{outline:2px solid var(--acc); outline-offset:-1px; border-color:var(--acc)}
+
+/* ───────── Vorschau am unteren Rand ───────── */
+footer{
+  background:var(--panel); border-top:1px solid var(--line);
+  display:flex; flex-direction:column; flex:0 0 auto;
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -3px 14px rgba(0,0,0,.09);
+}
+.grip{       /* Griffleiste zum Verstellen der Vorschauhöhe */
+  height:16px; flex:0 0 auto; cursor:ns-resize; touch-action:none;
+  display:flex; align-items:center; justify-content:center;
+}
+.grip::before{content:""; width:48px; height:4px; border-radius:2px; background:var(--line)}
+.grip:hover::before,.grip.drag::before{background:var(--acc)}
+.fbar{display:flex; align-items:center; gap:8px; padding:2px 12px 6px; flex-wrap:wrap}
+.fbar .ttl{font-size:12px; text-transform:uppercase; letter-spacing:.09em; color:var(--txt-dim); font-weight:700}
+.fbar .sp{flex:1}
+.fbar .note{font-size:12px; color:var(--txt-dim); font-style:italic}
+.fbar .warn{font-size:12px; color:var(--warn); font-weight:600}
+#copy{
+  background:var(--acc); border-color:var(--acc); color:#fff; font-weight:700;
+  min-height:var(--tap); padding:0 20px; font-size:15px;
+}
+#copy.done{background:var(--ok); border-color:var(--ok)}
+#out{
+  margin:0 12px 12px; padding:11px 13px; overflow:auto;
+  height:190px; min-height:60px; resize:vertical;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius);
+  font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; white-space:pre-wrap;
+}
+#out:focus{outline:2px solid var(--acc); outline-offset:-1px}
+#out.edit{background:var(--panel); border-color:var(--warn)}
+#out .h{font-weight:800; text-decoration:underline}
+#out .gap{   /* orange markierte Stelle: hier fehlt noch eine Angabe */
+  color:var(--warn); font-weight:800;
+  background:rgba(230,126,34,.22); border-radius:3px; padding:0 2px;
+}
+#stage{position:fixed; left:-9999px; top:0; opacity:0; white-space:pre-wrap}
+
+/* Hinweisleiste der Selbstprüfung – erscheint nur bei Fehlern im Katalog */
+#pruefung{
+  background:#fff4e5; color:#7a3d00; border-bottom:2px solid var(--warn);
+  padding:10px 14px; font-size:13px; line-height:1.5;
+}
+#pruefung b{display:block; margin-bottom:4px}
+#pruefung ul{margin:4px 0 0; padding-left:20px}
+
+/* Schmale Bildschirme */
+@media (max-width:560px){
+  header h1{font-size:14px}
+  #out{height:150px}
+  .tab{min-width:72px; font-size:13px}
+  .ihd{min-width:100%}
+}
+
+/* ───────── Baustein-Editor ───────── */
+#editor{
+  display:none; position:fixed; inset:0; z-index:800;
+  background:var(--bg); color:var(--txt);
+  flex-direction:column; overflow:hidden;
+}
+#editor.open{display:flex}
+#editor header{
+  flex:0 0 auto;
+}
+#editor .ed-body{
+  flex:1; min-height:0; display:flex; overflow:hidden;
+}
+#editor .ed-list{
+  flex:1; min-width:0; overflow-y:auto; padding:12px 12px 24px;
+  -webkit-overflow-scrolling:touch;
+}
+#editor .ed-form{
+  width:min(420px, 100%); flex:0 0 auto; overflow-y:auto;
+  border-left:1px solid var(--line); background:var(--panel);
+  padding:14px 16px 28px; -webkit-overflow-scrolling:touch;
+}
+#editor .ed-form[hidden]{display:none !important}
+#editor .ed-grp{
+  margin-bottom:14px; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:10px 12px;
+}
+#editor .ed-grp-hd{
+  display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;
+}
+#editor .ed-grp-hd h2{
+  font-size:12px; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--txt-dim); margin:0; font-weight:700; flex:1;
+}
+#editor .ed-row{
+  display:flex; align-items:center; gap:6px; padding:6px 0;
+  border-top:1px solid var(--line); flex-wrap:wrap;
+}
+#editor .ed-row:first-of-type{border-top:0}
+#editor .ed-row .nm{flex:1; min-width:120px; font-weight:600}
+#editor .ed-row .sz{
+  flex:2; min-width:140px; font-size:12px; color:var(--txt-dim);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+#editor .ed-form h3{margin:0 0 12px; font-size:15px}
+#editor .ed-form label{
+  display:block; font-size:12px; font-weight:700; color:var(--txt-dim);
+  text-transform:uppercase; letter-spacing:.06em; margin:12px 0 5px;
+}
+#editor .ed-form label:first-of-type{margin-top:0}
+#editor .ed-form input[type=text],
+#editor .ed-form textarea,
+#editor .ed-form select{
+  width:100%; background:var(--panel-2); border:1px solid var(--line);
+  border-radius:8px; padding:9px 10px; min-height:38px;
+}
+#editor .ed-form textarea{min-height:72px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px}
+#editor .ed-form input:focus,
+#editor .ed-form textarea:focus,
+#editor .ed-form select:focus{outline:2px solid var(--acc); outline-offset:0; border-color:var(--acc)}
+#editor .ed-check{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:14px}
+#editor .ed-check input{width:18px; height:18px; accent-color:var(--acc)}
+#editor .ed-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px}
+#editor .ed-actions .btn.primary{
+  background:var(--acc); border-color:var(--acc); color:#fff; font-weight:700;
+}
+#editor .ed-hint{
+  font-size:12px; color:var(--txt-dim); margin:8px 0 0; line-height:1.45;
+}
+#editor .ed-field{
+  border:1px solid var(--line); border-radius:8px; padding:10px;
+  margin-top:10px; background:var(--panel-2);
+}
+#editor .ed-field-hd{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+#editor .ed-field-hd strong{flex:1; font-size:13px}
+#editor .btn.warn{
+  color:var(--warn); border-color:color-mix(in srgb, var(--warn) 40%, var(--line));
+}
+#editor .btn.sm{padding:6px 10px; min-height:34px; font-size:13px}
+#editor .ed-empty{
+  color:var(--txt-dim); font-style:italic; padding:8px 2px; font-size:13px;
+}
+@media (max-width:720px){
+  #editor .ed-body{flex-direction:column}
+  #editor .ed-form{
+    width:100%; border-left:0; border-top:1px solid var(--line);
+    max-height:55%;
+  }
+  #editor .ed-row .sz{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="pruefung" hidden></div>
+
+<header>
+  <h1>Chirurgische Visite</h1>
+  <input type="date" id="datum">
+  <span class="seg" id="geschlecht" title="Anrede im Text">
+    <button class="segb on" data-g="Patient">M</button>
+    <button class="segb" data-g="Patientin">W</button>
+  </span>
+  <button class="btn" id="teilnehmer" title="Teilnehmer der Visite – bleibt beim Zurücksetzen erhalten">Teilnehmer</button>
+  <span class="sp"></span>
+  <button class="btn" id="modus" title="Ausgabeformat umschalten">Fließtext</button>
+  <button class="btn" id="reset">Zurücksetzen</button>
+  <button class="btn" id="edit-bausteine" title="Bausteine hinzufügen, ändern oder entfernen">Bausteine bearbeiten</button>
+  <button class="btn" id="save" title="Aktuelle Bausteine in einer HTML-Datei auf diesem PC speichern">⤓ HTML speichern</button>
+</header>
+
+<nav id="tabs"></nav>
+<main id="main"></main>
+
+<footer>
+  <div class="grip" id="grip" title="Ziehen ändert die Höhe der Vorschau · Doppelklick setzt zurück"></div>
+  <div class="fbar">
+    <span class="ttl">Vorschau</span>
+    <span class="note" id="hint">– noch keine Bausteine ausgewählt –</span>
+    <span class="warn" id="edited" hidden>manuell angepasst · nächster Baustein-Klick übernimmt wieder</span>
+    <span class="warn" id="gaps" hidden></span>
+    <span class="sp"></span>
+    <button class="btn" id="resync" hidden>↻ Neu aufbauen</button>
+    <button class="btn" id="copy">In Zwischenablage</button>
+  </div>
+  <div id="out" contenteditable="true"></div>
+</footer>
+<div id="stage" contenteditable="true"></div>
+
+<!-- Teilnehmer: Overlay über der Visite, nicht über dem Baustein-Editor -->
+<div id="tn-dlg" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="tn-titel">
+  <div class="dlg-card">
+    <h2 id="tn-titel">Teilnehmer der Visite</h2>
+    <p class="dlg-hint">Bleibt beim Zurücksetzen erhalten. Erst ein Neuladen der Datei setzt die Angabe zurück.</p>
+    <div class="dlg-modes" id="tn-modes">
+      <button type="button" class="dlg-mode on" data-art="namen">
+        Reguläre Visite
+        <small>Chirurgische Visite vom … · Teilnehmer: …</small>
+      </button>
+      <div class="dlg-modes-row">
+        <button type="button" class="dlg-mode" data-art="oa">
+          Oberarztvisite
+          <small>… Oberarztvisite vom … mit …</small>
+        </button>
+        <button type="button" class="dlg-mode" data-art="ca">
+          Chefarztvisite
+          <small>… Chefarztvisite vom … mit …</small>
+        </button>
+      </div>
+    </div>
+    <label id="tn-lab" for="tn-text">Teilnehmer</label>
+    <input type="text" id="tn-text" autocomplete="off" spellcheck="false"
+           placeholder="z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier">
+    <div class="dlg-actions">
+      <button type="button" class="btn" id="tn-clear">Leeren</button>
+      <button type="button" class="btn" id="tn-cancel">Abbrechen</button>
+      <button type="button" class="btn primary" id="tn-ok">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Baustein-Editor: vollflächig über der Anwendung -->
+<div id="editor" aria-hidden="true">
+  <header>
+    <h1>Bausteine bearbeiten</h1>
+    <span class="sp"></span>
+    <button class="btn" id="ed-save" title="Geänderte Bausteine als HTML-Datei speichern">⤓ HTML speichern</button>
+    <button class="btn" id="ed-close">Fertig</button>
+  </header>
+  <nav id="ed-tabs"></nav>
+  <div class="ed-body">
+    <div class="ed-list" id="ed-list"></div>
+    <aside class="ed-form" id="ed-form" hidden></aside>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SCRIPT 1 – FEHLERWÄCHTER
+     Muss vor dem Hauptskript stehen. Wenn beim Anpassen der Bausteine ein
+     Komma oder eine Klammer fehlt, bliebe die Seite sonst einfach weiß.
+     Stattdessen erscheint hier eine Meldung mit der Zeilennummer.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+window.addEventListener("error", function(ev){
+  if(document.getElementById("fehlerbox")) return;      // nur die erste Meldung zeigen
+  var box = document.createElement("div");
+  box.id = "fehlerbox";
+  box.setAttribute("style",
+    "position:fixed;inset:0;z-index:9999;background:#7a1420;color:#fff;"+
+    "padding:32px;font:15px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;overflow:auto");
+  box.innerHTML =
+    "<h2 style='margin:0 0 12px'>Die Datei enthält einen Tippfehler</h2>"+
+    "<p style='margin:0 0 16px'>Zuletzt wurde vermutlich etwas an den Bausteinen geändert. "+
+    "Die Seite kann deshalb nicht starten.</p>"+
+    "<p style='margin:0 0 8px'><b>Fehler in Zeile "+(ev.lineno||"?")+
+    (ev.colno?", Spalte "+ev.colno:"")+"</b></p>"+
+    "<p style='margin:0 0 20px;font-family:ui-monospace,Menlo,Consolas,monospace;"+
+    "background:rgba(0,0,0,.28);padding:10px 12px;border-radius:8px'>"+
+    String(ev.message||"").replace(/[<>&]/g,"")+"</p>"+
+    "<p style='margin:0 0 6px'><b>Die drei häufigsten Ursachen:</b></p>"+
+    "<ol style='margin:0 0 20px;padding-left:22px'>"+
+    "<li>Ein <b>Komma</b> fehlt am Ende einer Zeile – oder es steht eines zu viel vor einer schließenden Klammer.</li>"+
+    "<li>Eine <b>Klammer</b> <code>{ }</code> oder <code>[ ]</code> wurde nicht geschlossen.</li>"+
+    "<li>Ein <b>Anführungszeichen</b> fehlt, oder im Text steht ein <code>\"</code>, "+
+    "das mit <code>\\\"</code> geschrieben werden muss.</li></ol>"+
+    "<p style='margin:0'>Öffnen Sie die Datei im Texteditor, springen Sie zu der genannten Zeile "+
+    "und schauen Sie auch <b>die Zeile darüber</b> an – dort steckt der Fehler meistens. "+
+    "Danach speichern und die Seite neu laden.</p>";
+  document.body.appendChild(box);
+});
+</script>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SCRIPT 2 – ANLEITUNG, BAUSTEINE UND PROGRAMMLOGIK
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+"use strict";
+
+/* Vorlage für "HTML speichern": die Originaldatei, in der später nur der
+   BAUSTEINE-Block ausgetauscht wird. document.documentElement.outerHTML
+   verliert Kommentare vor <html> (Dateikopf) und formatiert den Rest um.
+   Deshalb Dateikopf extra einsammeln und – sobald möglich – die echte
+   Dateiquelle per fetch nehmen. Muss früh laufen, solange der DOM noch
+   unverändert ist (Fallback, falls fetch z. B. unter file:// scheitert). */
+function dateiKopfVorHtml(){
+  let kopf = "";
+  for(const n of document.childNodes){
+    if(n === document.documentElement) break;
+    if(n.nodeType === Node.DOCUMENT_TYPE_NODE)
+      kopf += "<!DOCTYPE html>\n";
+    else if(n.nodeType === Node.COMMENT_NODE)
+      kopf += "<!--" + n.nodeValue + "-->\n";
+    else if(n.nodeType === Node.TEXT_NODE)
+      kopf += n.nodeValue;
+  }
+  return kopf || "<!DOCTYPE html>\n";
+}
+let SELF = dateiKopfVorHtml() + document.documentElement.outerHTML;
+const originalQuelleBereit = fetch(location.href, { cache:"no-store" })
+  .then(r => r.ok ? r.text() : "")
+  .then(t => {
+    if(t.includes("/*@@BAUSTEINE_BEGIN@@*/") && t.includes("/*@@BAUSTEINE_END@@*/"))
+      SELF = t;
+  })
+  .catch(() => {});
+
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║                                                                       ║
+   ║   A N L E I T U N G :   B A U S T E I N E   A N P A S S E N           ║
+   ║                                                                       ║
+   ╚═══════════════════════════════════════════════════════════════════════╝
+
+   Alles, was in der Anwendung anklickbar ist, steht unten in der Liste
+   BAUSTEINE. Zum Ändern gibt es zwei Wege:
+
+   A) Über die Oberfläche: Knopf „Bausteine bearbeiten" oben rechts.
+      Änderungen mit „HTML speichern" als Datei auf dem PC ablegen und
+      diese Datei künftig öffnen – sonst sind die Anpassungen nach dem
+      Neuladen wieder weg.
+
+   B) Direkt in der Datei: Im Texteditor öffnen, Zeile anpassen,
+      speichern, Seite im Browser neu laden (Strg+R bzw. Cmd+R).
+
+
+   ─── GRUNDREGELN (nur für Weg B, Texteditor) ───────────────────────────
+
+   • Jeder Text steht in "doppelten Anführungszeichen".
+   • Nach jedem Eintrag kommt ein Komma – außer beim letzten vor einer
+     schließenden Klammer.
+   • Klammern immer paarweise:  { }  und  [ ]
+   • Soll im Text selbst ein Anführungszeichen stehen, davor einen
+     Rückstrich setzen:   "sog. \"Platzbauch\""
+   • Nach dem Speichern neu laden. Erscheint eine rote Fehlerseite, steht
+     dort die Zeilennummer – meist fehlt in dieser oder der Zeile darüber
+     ein Komma oder eine Klammer.
+
+
+   ─── 1. EINEN TEXT ÄNDERN ───────────────────────────────────────────────
+
+       { knopf:"Bruchpforten frei", satz:"Bruchpforten frei" },
+                ▲                          ▲
+                Aufschrift auf dem Knopf   was in der Dokumentation landet
+
+   Beides ist frei änderbar. Der Knopf darf kurz sein, der Satz ausführlich.
+
+
+   ─── 2. EINEN EINFACHEN BAUSTEIN HINZUFÜGEN ─────────────────────────────
+
+   Diese eine Zeile an beliebiger Stelle innerhalb einer Gruppe einfügen:
+
+       { knopf:"Aufschrift", satz:"Satz für die Dokumentation" },
+
+   Ohne Satzzeichen am Ende – der Punkt wird automatisch gesetzt.
+
+
+   ─── 3. EINEN BAUSTEIN MIT AUSWAHLKNÖPFEN ───────────────────────────────
+
+   {P} wird automatisch zu "Patient" oder "Patientin" (Schalter M/W oben).
+   {z} ist der Platzhalter, an dessen Stelle die Auswahl eingesetzt wird.
+
+       { knopf:"Abdomen", satz:"Abdomen {z}", felder:[
+           { name:"z", art:"auswahl", vorgabe:"weich", optionen:[
+               "weich",
+               "gespannt",
+               ["gebläht", "gebläht und meteoristisch"]
+           ]}
+       ]},
+
+   Eine Option kann auf zwei Arten geschrieben werden:
+       "weich"                        Knopfaufschrift und Satzteil sind gleich
+       ["gebläht", "gebläht und ..."]  kurze Aufschrift, ausführlicher Satzteil
+
+   "vorgabe" ist die Option, die schon aktiv ist, sobald man den Baustein
+   anklickt. Dadurch genügt EIN Klick für den Normalbefund. Der Wert muss
+   exakt dem Satzteil entsprechen (also dem zweiten Eintrag bei der langen
+   Schreibweise).
+
+
+   ─── 4. EIN ZAHLEN- ODER TEXTFELD ───────────────────────────────────────
+
+       { knopf:"Tag stationär", satz:"{n}. Tag des stationären Aufenthaltes",
+         felder:[ { name:"n", art:"zahl", hinweis:"Tg" } ]},
+
+       art:"zahl"   Nummernfeld (Tastatur zeigt Ziffern)
+       art:"text"   normales Textfeld
+       hinweis      grauer Text im leeren Feld
+       breit:true   breiteres Feld (für ganze Wörter)
+       mittel:true  mittleres Feld
+
+
+   ─── 5. ANGABEN FREIWILLIG MACHEN  (sehr wichtig!) ──────────────────────
+
+   Ohne "freiwillig" muss ein Feld ausgefüllt werden – sonst erscheint in
+   der Vorschau eine orange markierte Lücke ___ .
+
+   Mit "freiwillig:true" verschwindet das Feld einfach aus dem Satz, wenn
+   es leer bleibt. "davor" und "danach" werden dann ebenfalls nur bei
+   ausgefülltem Feld eingesetzt:
+
+       { knopf:"Antibiose", satz:"Antibiotische Therapie{m} fortführen",
+         felder:[
+           { name:"m", art:"text", hinweis:"Präparat",
+             freiwillig:true, davor:" mit ", breit:true }
+       ]},
+
+       ein Klick        →  "Antibiotische Therapie fortführen."
+       "Cefuroxim"      →  "Antibiotische Therapie mit Cefuroxim fortführen."
+
+   Faustregel: Alles, was man auch weglassen kann, bekommt "freiwillig:true".
+
+
+   ─── 6. MEHRFACHAUSWAHL ─────────────────────────────────────────────────
+
+       art:"mehrfachauswahl"       mehrere Knöpfe gleichzeitig aktivierbar
+       einzelsaetze:true           jede Auswahl wird ein eigener Satz
+                                   (ohne diese Angabe: mit Komma aneinander)
+
+       { knopf:"Verdacht auf", satz:"V.a. {z}", felder:[
+           { name:"z", art:"mehrfachauswahl", optionen:[ ... ]}
+       ]},
+       →  "V.a. Wundinfektion, paralytischen Ileus."
+
+       { knopf:"Organisation", satz:"{z}", felder:[
+           { name:"z", art:"mehrfachauswahl", einzelsaetze:true, optionen:[ ... ]}
+       ]},
+       →  "Sozialdienst einschalten. Angehörigengespräch."
+
+
+   ─── 7. MEHRERE EINTRÄGE DESSELBEN BAUSTEINS ────────────────────────────
+
+   Mit "mehrfach:true" erscheint unter dem Baustein "+ weiterer Eintrag".
+   So lassen sich z.B. zwei Schmerzorte oder drei PVK getrennt erfassen –
+   jeder mit eigener Lokalisation und eigenen Werten.
+
+       { knopf:"Schmerzen", mehrfach:true, satz:"...", felder:[ ... ]},
+
+
+   ─── 8. WEITERE MÖGLICHKEITEN ───────────────────────────────────────────
+
+       titel:"Seite"          Beschriftung links vor einer Auswahlreihe
+       eigeneEingabe:true     hängt ein Feld "sonstige" an die Auswahlreihe;
+                              was dort steht, ersetzt die Auswahl
+       nurEines:"gruppe"      Bausteine mit demselben Wort schließen sich
+                              gegenseitig aus (z.B. "Schmerzfrei" und
+                              "Schmerzen" – nur eines kann aktiv sein)
+       trenner:" und "        Trennzeichen bei Mehrfachauswahl (Vorgabe ", ")
+       alleinstehend:true     verträgt sich mit keinem anderen Baustein
+                              dieses Reiters – gedacht für Aussagen wie
+                              "Kein Fremdmaterial". Beim Anklicken wird alles
+                              andere abgewählt und umgekehrt.
+       gruppe:""              eine Gruppe ohne Zwischenüberschrift
+
+
+   ─── 9. EINEN BAUSTEIN ENTFERNEN ────────────────────────────────────────
+
+   Die komplette Zeile bzw. den kompletten { ... }-Block löschen –
+   einschließlich des Kommas am Ende.
+   Alternativ zwei Schrägstriche davorsetzen, dann ist er nur ausgeblendet:
+
+       // { knopf:"Wird gerade nicht gebraucht", satz:"..." },
+
+
+   ─── 10. EINE NEUE GRUPPE ODER EINEN NEUEN REITER ───────────────────────
+
+   Neue Gruppe (Zwischenüberschrift) innerhalb eines Reiters:
+
+       { gruppe:"Meine Überschrift", bausteine:[
+           { knopf:"...", satz:"..." },
+       ]},
+
+   Die fünf Reiter S, O, A, P und FM sind fest vorgegeben; ihre Namen
+   stehen jeweils bei "name:" ganz oben im jeweiligen Abschnitt.
+
+
+   ─── SELBSTPRÜFUNG ──────────────────────────────────────────────────────
+
+   Beim Laden prüft die Seite die Bausteine automatisch und zeigt oben eine
+   orange Leiste, falls etwas nicht zusammenpasst – etwa ein Platzhalter
+   {x} ohne zugehöriges Feld oder eine "vorgabe", die in keiner Option
+   vorkommt. Die Anwendung läuft trotzdem weiter.
+
+   ════════════════════════════════════════════════════════════════════════
+*/
+
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║   WIEDERVERWENDBARE LISTEN                                            ║
+   ║   Werden an mehreren Stellen benutzt. Eine Ergänzung hier wirkt        ║
+   ║   sofort überall dort, wo die Liste eingebunden ist.                  ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+const SEITE  = ["rechts", "links", "beidseits"];
+
+const SEKRET = ["serös", "serös-blutig", "blutig", "altblutig", "serös umgeschlagen",
+                "trüb", "putride"];
+
+/* "Drainage" steht bewusst an erster Stelle und ist die Vorgabe:
+   ein Klick genügt, die genaue Art ist eine Verfeinerung. */
+const DRAIN  = ["Drainage", "Redon-Drainage", "Blake-Drainage", "Easy-Flow-Drainage",
+                "Robinson-Drainage", "Zieldrainage", "Lasche", "Thoraxdrainage",
+                "Magensonde", "VAC-System", "Spül-VAC"];
+
+/* Ein komplettes, fertiges Feld – lässt sich in jeden Baustein einsetzen,
+   der eine Seitenangabe braucht. Der Platzhalter dazu ist {s}. */
+const FELD_SEITE = { name:"s", art:"auswahl", titel:"Seite",
+                     freiwillig:true, davor:" ", optionen:SEITE };
+
+/* Anmerkung zur weiteren Planung – hängt an jedem Fremdmaterial.
+   Der Platzhalter dazu ist {plan}. Ergibt z.B.
+   "PVK (Unterarm li.) für Antibiose, wird heute entfernt".                */
+const FELD_PLAN = { name:"plan", art:"auswahl", titel:"Planung",
+                    freiwillig:true, davor:", ", optionen:[
+  ["heute entfernen",  "wird heute entfernt"],
+  ["morgen entfernen", "wird morgen entfernt"],
+  ["wechseln",         "wird gewechselt"],
+  ["belassen",         "vorerst belassen"]
+]};
+
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║                                                                       ║
+   ║   B A U S T E I N E                                                   ║
+   ║                                                                       ║
+   ║   Fünf Reiter. Jeder Reiter enthält Gruppen, jede Gruppe Bausteine.   ║
+   ║   Die Reihenfolge hier ist die Reihenfolge auf dem Bildschirm –       ║
+   ║   und auch die Reihenfolge der Sätze in der fertigen Dokumentation.   ║
+   ║                                                                       ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/*@@BAUSTEINE_BEGIN@@*/
+const BAUSTEINE = {
+
+/* ═════════════════════════════ S – SUBJEKTIV ═════════════════════════════
+   Was die Patientin oder der Patient berichtet.                          */
+S:{ name:"Subjektiv", gruppen:[
+
+  { gruppe:"Allgemein", bausteine:[
+
+    { knopf:"Befinden", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"{P} gibt subjektives Wohlbefinden an", optionen:[
+        ["wohl",         "{P} gibt subjektives Wohlbefinden an"],
+        ["gebessert",    "{P} fühl sich deutlich besser"],
+        ["unverändert",  "Befinden unverändert zum Vortag"],
+        ["reduziert",    "Reduziertes Allgemeinbefinden"],
+        ["abgeschlagen", "{P} klagt über Abgeschlagenheit und Müdigkeit"]
+      ]}
+    ]},
+
+    { knopf:"Angetroffen", satz:"{P} wird {z} angetroffen", felder:[
+      { name:"z", art:"auswahl", vorgabe:"liegend im Bett", optionen:[
+        ["liegend",          "liegend im Bett"],
+        ["sitzend im Bett",  "sitzend im Bett"],
+        ["sitzend am Tisch", "sitzend am Tisch"],
+        ["stehend",          "stehend"]
+      ]}
+    ]},
+
+    { knopf:"Nachtruhe", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Nachtruhe erholsam", optionen:[
+        ["erholsam", "Nachtruhe erholsam"],
+        ["unruhig",  "Unruhige Nacht"]
+      ]}
+    ]}
+
+  ]},
+
+  { gruppe:"Schmerzen", bausteine:[
+
+    /* "nurEines" sorgt dafür, dass Schmerzfrei und Schmerzen sich ausschließen. */
+    { knopf:"Schmerzfrei", nurEines:"schmerz", satz:"Schmerzfrei" },
+
+    /* Mehrfach: erlaubt z.B. Bauchschmerz UND Beinschmerz nebeneinander.
+       Ergibt z.B. "Mäßige Bauchschmerzen links, NRS 4/10".
+       Reihenfolge im Satz: Stärke – Ort – Seite – NRS.                    */
+    { knopf:"Schmerzen", nurEines:"schmerz", mehrfach:true,
+      satz:"{i}{ort}{s}{n}", felder:[
+      { name:"n", art:"zahl", hinweis:"NRS",
+        freiwillig:true, davor:", NRS ", danach:"/10" },
+      { name:"ort", art:"auswahl", titel:"Ort", vorgabe:"Wundschmerzen",
+        eigeneEingabe:true, optionen:[
+        ["Wunde",     "Wundschmerzen"],
+        ["OP-Gebiet", "Schmerzen im OP-Gebiet"],
+        ["Bauch",     "Bauchschmerzen"],
+        ["Rücken",    "Rückenschmerzen"],
+        ["Schulter",  "Schulterschmerzen"],
+        ["Steiß",    "Steißchmerzen"],
+        ["Thorax",    "Thoraxschmerzen"],
+        ["Bein",      "Beinschmerzen"],
+        ["Kopf",      "Kopfschmerzen"]
+      ]},
+      FELD_SEITE,
+      { name:"i", art:"auswahl", titel:"Stärke", freiwillig:true, danach:" ",
+        optionen:["Leichte","Mäßige","Starke","Zunehmende","Rückläufige"] }
+    ]},
+
+    { knopf:"Analgesie", satz:"Schmerzen unter aktueller Analgesie {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"gut kontrolliert", optionen:[
+        ["ausreichend",      "gut kontrolliert"],
+        ["nicht ausreichend","nicht ausreichend kontrolliert"]
+      ]}
+    ]},
+
+    { knopf:"Bedarfsanalgesie", satz:"Bedarfsanalgesie{n} benötigt", felder:[
+      { name:"n", art:"zahl", hinweis:"x",
+        freiwillig:true, davor:" ", danach:"x in den letzten 24 h" }
+    ]}
+
+  ]},
+
+  { gruppe:"Verdauung", bausteine:[
+
+    /* Stuhlgang und Stoma schließen sich aus – Stomaträger haben keinen
+       Stuhlgang im üblichen Sinn.                                        */
+    { knopf:"Stuhlgang", nurEines:"stuhl", satz:"{z}{n}", felder:[
+      { name:"n", art:"zahl", hinweis:"Tg",
+        freiwillig:true, davor:" seit ", danach:" Tagen" },
+      { name:"z", art:"auswahl", vorgabe:"Stuhlgang regelrecht", optionen:[
+        ["regelrecht",    "Stuhlgang regelrecht"],
+        ["kein Stuhlgang","Kein Stuhlgang"],
+        ["Diarrhoe",      "Diarrhoe"],
+        ["Obstipation",   "Obstipation"]
+      ]}
+    ]},
+
+    { knopf:"Stoma", nurEines:"stuhl", satz:"Stoma {z}{n}{q}", felder:[
+      { name:"n", art:"zahl", hinweis:"ml",
+        freiwillig:true, davor:", ", danach:" ml/24 h" },
+      { name:"z", art:"auswahl", vorgabe:"fördert regelrecht", optionen:[
+        ["regelrecht","fördert regelrecht"],
+        ["vermehrt",  "fördert vermehrt"],
+        ["nicht",     "fördert bisher nicht"]
+      ]},
+      { name:"q", art:"auswahl", titel:"Konsistenz", freiwillig:true, davor:", ",
+        optionen:["geformt","breiig","dünnflüssig","flüssig","wässrig","blutig"] }
+    ]},
+
+    { knopf:"Windabgang", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Windabgang vorhanden", optionen:[
+        ["vorhanden","Windabgang vorhanden"],
+        ["kein",     "Bisher kein Windabgang"]
+      ]}
+    ]},
+
+    { knopf:"Übelkeit / Erbrechen", satz:"{z}{n}", felder:[
+      { name:"n", art:"zahl", hinweis:"x",
+        freiwillig:true, davor:", ", danach:"x in 24 h" },
+      { name:"z", art:"auswahl", vorgabe:"Keine Übelkeit, kein Erbrechen", optionen:[
+        ["keine",    "Keine Übelkeit, kein Erbrechen"],
+        ["Übelkeit", "Übelkeit"],
+        ["Erbrechen","Erbrechen"]
+      ]}
+    ]},
+
+    { knopf:"Kost", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Kost wird gut vertragen", optionen:[
+        ["wird vertragen",   "Kost wird gut vertragen"],
+        ["Aufbau problemlos", "Kostaufbau verläuft problemlos"],
+        ["Aufbau langsam", "Kostaufbau langsam möglich"],
+        ["nicht vertragen",  "Kost wird nicht vertragen"],
+        ["Appetit reduziert","Appetit reduziert"],
+        ["nüchtern",         "Aktuell nüchtern"]
+      ]}
+    ]}
+
+  ]},
+
+  { gruppe:"Miktion / Mobilisation / Atmung", bausteine:[
+
+    { knopf:"Miktion", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Miktion spontan und regelrecht", optionen:[
+        ["regelrecht","Miktion spontan und regelrecht"],
+        ["Beschwerden","Miktionsbeschwerden"],
+        ["über DK",   "Harnableitung über Blasenkatheter"]
+      ]}
+    ]},
+
+    { knopf:"Mobilisation", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Selbstständig auf Station mobil", optionen:[
+        ["selbstständig","Selbstständig auf Station mobil"],
+        ["mit Hilfe",    "Mobilisation auf Station mit Unterstützung"],
+        ["Bettkante",    "Mobilisation bis an die Bettkante"],
+        ["bettlägerig",  "Aktuell bettlägerig"]
+      ]}
+    ]},
+
+    { knopf:"Atemtrainer", satz:"Atemtrainer wird {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"regelmäßig genutzt", optionen:[
+        ["genutzt",      "regelmäßig genutzt"],
+        ["nicht genutzt","nicht genutzt"]
+      ]}
+    ]},
+
+    { knopf:"Luftnot", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Keine Luftnot", optionen:[
+        ["keine",             "Keine Luftnot"],
+        ["bei Belastung",     "Luftnot bei Belastung"],
+        ["in Ruhe",           "Luftnot in Ruhe"],
+        ["produktiver Husten","Produktiver Husten"]
+      ]}
+    ]}
+
+  ]}
+]},
+
+
+/* ═════════════════════════════ O – OBJEKTIV ══════════════════════════════
+   Der erhobene Untersuchungsbefund.                                      */
+O:{ name:"Objektiv", gruppen:[
+
+  { gruppe:"Allgemein / Vitalwerte", bausteine:[
+
+    { knopf:"AZ stabil", satz:"Wach, allseits orientiert, kardiopulmonal stabil" },
+
+    { knopf:"Temperatur", satz:"{z}{n}", felder:[
+      { name:"n", art:"text", hinweis:"°C", freiwillig:true, davor:", ", danach:" °C" },
+      { name:"z", art:"auswahl", vorgabe:"Afebril", optionen:[
+        ["afebril",  "Afebril"],
+        ["subfebril","Subfebril"],
+        ["febril",   "Febril"]
+      ]}
+    ]},
+
+    /* Alle vier Werte sind freiwillig: man trägt nur ein, was man gemessen
+       hat. Ohne jede Eingabe erscheint dieser Baustein gar nicht im Text.  */
+    { knopf:"Vitalwerte", satz:"{rr}{hf}{sp}{z}", felder:[
+      { name:"rr", art:"text", hinweis:"120/75", freiwillig:true,
+        davor:"RR ", danach:" mmHg", mittel:true },
+      { name:"hf", art:"zahl", hinweis:"HF", freiwillig:true,
+        davor:", HF ", danach:"/min" },
+      { name:"sp", art:"zahl", hinweis:"SpO₂", freiwillig:true,
+        davor:", SpO₂ ", danach:" %" },
+      { name:"z", art:"auswahl", titel:"unter", freiwillig:true, davor:" ", optionen:[
+        ["Raumluft","unter Raumluft"],
+        ["2 l O₂",  "unter 2 l O₂/min"],
+        ["4 l O₂",  "unter 4 l O₂/min"],
+        ["6 l O₂",  "unter 6 l O₂/min"]
+      ]}
+    ]},
+
+    { knopf:"Somnolent", satz:"Somnolent, erweckbar" }
+
+  ]},
+
+  { gruppe:"Abdomen", bausteine:[
+
+    { knopf:"Abdomen", satz:"Abdomen {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"weich", optionen:[
+        ["weich",        "weich"],
+        ["adipös, weich","adipös und weich"],
+        ["gebläht",      "gebläht"],
+        ["gespannt",     "gespannt"]
+      ]}
+    ]},
+
+    { knopf:"Druckschmerz", satz:"{z}{f}{s}", felder:[
+      { name:"f", art:"text", hinweis:"Ergänzung", freiwillig:true, davor:", ", breit:true }, 
+      { name:"z", art:"auswahl", vorgabe:"Kein Druckschmerz",
+        eigeneEingabe:true, optionen:[
+        ["kein",          "Kein Druckschmerz"],
+        ["OP-Gebiet",     "Druckschmerz im OP-Gebiet"],
+        ["Oberbauch", "Druckschmerz im Oberbauch"],
+        ["Unterbauch","Druckschmerz im  Unterbauch"],
+        ["Mittelbauch",   "Druckschmerz im Mittelbauch"],
+        ["epigastrisch",  "Druckschmerz epigastrisch"],
+        ["diffus",        "Druckschmerz über dem gesamten Abdomen"]
+      ]}, FELD_SEITE
+    ]},
+
+    { knopf:"Abwehrspannung", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Keine Abwehrspannung", optionen:[
+        ["kein",          "Keine Abwehrspannung"],
+        ["leicht",  "Leichte Abwehrspannung"],
+        ["stark", "Starke Abwehrspannung"]
+      ]}
+    ]},
+
+    { knopf:"Darmgeräusche", satz:"{z}", felder:[
+      { name:"z", art:"auswahl",
+        vorgabe:"Darmgeräusche über allen vier Quadranten regelrecht", optionen:[
+        ["regelrecht",   "Darmgeräusche über allen vier Quadranten regelrecht"],
+        ["reduziert",   "Darmgeräusche über allen vier Quadranten vorhanden, jedoch reduziert"],
+        ["spärlich",     "Spärliche Darmgeräusche"],
+        ["keine",        "Keine Darmgeräusche auskultierbar"],
+        ["hochgestellt", "Hochgestellte Darmgeräusche"]
+      ]}
+    ]},
+
+    { knopf:"Bruchpforten frei", satz:"Bruchpforten frei" },
+
+    { knopf:"Beide Hoden im Skrotum", satz:"Beide Hoden regelrecht im Skrotum tastbar" },
+
+    { knopf:"Hämatome", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Kein Hämatom",
+        eigeneEingabe:true, optionen:[
+        ["kein",       "Kein Hämatom"],
+        ["Leiste ",   "Leistenhämtom"],
+        ["Periumbilikal",   "Periumbilikalhämatom"],
+        ["Supraumbilikal",  "Supraumbilikalhämatom"],
+        ["Infraumbilikal", "Infraumbilikalhämatom"],
+        ["Skrotal",    "Skrotalhämatom"]
+      ]}
+      ]},
+
+    { knopf:"Rektal digital", satz:"Digital-rektale Untersuchung {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"ohne pathologischen Befund",
+        eigeneEingabe:true, optionen:[
+        ["o.p.B.",       "ohne pathologischen Befund"],
+        ["leere Ampulle","mit leerer Ampulle"],
+        ["Stuhl",        "mit Stuhl in der Ampulle"],
+        ["Blut",         "mit Blut am Fingerling"],
+        ["Druckschmerz", "mit Druckschmerz"],
+        ["Resistenz",    "mit tastbarer Resistenz"]
+      ]}
+    ]}
+
+  ]},
+
+  { gruppe:"Wunde / Verband", bausteine:[
+
+    { knopf:"Wunde", satz:"{z}{n}{q}", felder:[
+      { name:"n", art:"zahl", hinweis:"cm",
+        freiwillig:true, davor:" auf ", danach:" cm Länge" },
+      { name:"z", art:"auswahl", vorgabe:"Wundverhältnisse reizlos", optionen:[
+        ["reizlos",  "Wundverhältnisse reizlos"],
+        ["Rötung",   "Diskrete Rötung der Wundränder"],
+        ["Infekt",   "Gerötete, überwärmte Wunde mit putrider Sekretion"],
+        ["Dehiszenz","Wunddehiszenz"],
+        ["Serom",    "Tastbares Serom im Wundbereich"],
+        ["Hämatom",  "Hämatom im Wundbereich"]
+      ]},
+      { name:"q", art:"auswahl", titel:"sezerniert", freiwillig:true,
+        davor:", Sekretion ", optionen:SEKRET }
+    ]},
+
+    { knopf:"Verband", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Verband trocken und sauber", optionen:[
+        ["trocken",      "Verband trocken und sauber"],
+        ["altblutig",    "Pflaster altblutig durchgeschlagen"],
+        ["frisch blutig","Pflaster frisch blutig durchgeschlagen"],
+        ["serös",        "Pflaster serös durchgeschlagen"],
+        ["blutig-serös",        "Pflaster blutig-serös durchgeschlagen"]
+      ]}
+    ]},
+
+    { knopf:"Klammern / Nähte in situ", satz:"Klammern bzw. Hautnähte reizlos in situ" },
+
+    { knopf:"VAC", satz:"{z}{n}{l}", felder:[
+      { name:"n", art:"zahl", hinweis:"mmHg", vorgabe:"125",
+        freiwillig:true, davor:", Sog ", danach:" mmHg" },
+      { name:"z", art:"auswahl", vorgabe:"VAC-Verband intakt", optionen:[
+        ["VAC intakt",     "VAC-Verband intakt"],
+        ["Spül-VAC intakt","Spül-VAC intakt"],
+        ["Granulation",    "Wundgrund gut granuliert unter der VAC-Therapie"]
+      ]},
+      { name:"l", art:"auswahl", titel:"Instillation", freiwillig:true,
+        davor:", Instillation mit ",
+        optionen:["NaCl 0,9 %","Lavasept","Prontosan","Octenilin"] }
+    ]}
+
+  ]},
+
+  { gruppe:"Drainagen / Ableitungen", bausteine:[
+
+    /* Mehrfach: mehrere Drainagen einzeln beschreiben.
+       Ergibt z.B. "Blake-Drainage rechts fördert 40 ml/24 h, serös".      */
+    { knopf:"Drainage", mehrfach:true, satz:"{d}{s} {z}{n}{q}", felder:[
+      { name:"n", art:"zahl", hinweis:"ml", freiwillig:true, davor:" ", danach:" ml/24 h" },
+      { name:"d", art:"auswahl", titel:"Art", vorgabe:"Drainage",
+        eigeneEingabe:true, optionen:DRAIN },
+      FELD_SEITE,
+      { name:"z", art:"auswahl", titel:"Status", vorgabe:"fördert", optionen:[
+        ["fördert",     "fördert"],
+        ["fördert nicht","fördert kein Sekret mehr"],
+        ["vermehrt",    "fördert vermehrt"]
+      ]},
+      { name:"q", art:"auswahl", titel:"Sekret", freiwillig:true, davor:", ",
+        optionen:SEKRET }
+    ]},
+
+    { knopf:"Urinausscheidung", satz:"{z}{n}", felder:[
+      { name:"n", art:"zahl", hinweis:"ml", freiwillig:true, davor:", ", danach:" ml/24 h" },
+      { name:"z", art:"auswahl", vorgabe:"Urinausscheidung ausreichend", optionen:[
+        ["ausreichend","Urinausscheidung ausreichend"],
+        ["vermindert", "Urinausscheidung vermindert"],
+        ["Oligurie",   "Oligurie"],
+        ["Anurie",     "Anurie"]
+      ]}
+    ]},
+
+    { knopf:"Bilanz", satz:"Bilanz {z}{n}", felder:[
+      { name:"n", art:"text", hinweis:"+500", freiwillig:true, davor:", ", danach:" ml" },
+      { name:"z", art:"auswahl", vorgabe:"ausgeglichen",
+        optionen:["ausgeglichen","positiv","negativ"] }
+    ]},
+
+    { knopf:"Stoma reizlos", satz:"Stoma gut durchblutet, fördert regelrecht" }
+
+  ]},
+
+  { gruppe:"Herz / Lunge / Extremitäten / Labor", bausteine:[
+
+    { knopf:"Herztöne rein", satz:"Herztöne rein und rhythmisch" },
+
+    { knopf:"Lunge", satz:"{z}{s}", felder:[
+      { name:"z", art:"auswahl",
+        vorgabe:"Vesikuläres Atemgeräusch beidseits, keine Nebengeräusche", optionen:[
+        ["vesikulär bds.",    "Vesikuläres Atemgeräusch beidseits, keine Nebengeräusche"],
+        ["basal abgeschwächt","Basal abgeschwächtes Atemgeräusch"],
+        ["Rasselgeräusche",   "Feuchte Rasselgeräusche"]
+      ]},
+      FELD_SEITE
+    ]},
+
+    { knopf:"Beinödeme", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Keine Beinödeme", optionen:[
+        ["keine",     "Keine Beinödeme"],
+        ["beidseits", "Beinödeme beidseits"],
+        ["rechts",    "Beinödeme rechts"],
+        ["links",     "Beinödeme links"],
+        ["prätibial", "Prätibiale Ödeme beidseits"]
+      ]}
+    ]},
+
+    { knopf:"Keine TVT-Zeichen",
+      satz:"Keine klinischen Zeichen einer tiefen Beinvenenthrombose" },
+
+    { knopf:"pDMS intakt",
+      satz:"Periphere Durchblutung, Motorik und Sensibilität intakt" },
+
+    { knopf:"Labor", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Laborchemisch unauffälliger Verlauf",
+        eigeneEingabe:true, optionen:[
+        ["unauffällig",            "Laborchemisch unauffälliger Verlauf"],
+        ["Infektwerte rückläufig", "Entzündungsparameter rückläufig"],
+        ["Infektwerte steigend",   "Entzündungsparameter ansteigend"],
+        ["Hb-Abfall",              "Hb-Abfall"],
+        ["Anämie",                 "Laborchemisch Anämie"]
+      ]}
+    ]}
+
+  ]}
+]},
+
+
+/* ════════════════════════════ A – ASSESSMENT ═════════════════════════════
+   Die Beurteilung der Situation.                                          */
+A:{ name:"Assessment", gruppen:[
+
+  { gruppe:"Verlauf", bausteine:[
+
+    { knopf:"Verlauf", satz:"{z}{n}", felder:[
+      { name:"n", art:"zahl", hinweis:"POD",
+        freiwillig:true, davor:", ", danach:". postoperativer Tag" },
+      { name:"z", art:"auswahl", vorgabe:"Regelrechter postoperativer Verlauf", optionen:[
+        ["regelrecht postop.",   "Regelrechter postoperativer Verlauf"],
+        ["protrahiert",          "Protrahierter postoperativer Verlauf"],
+        ["regelrecht konservativ","Regelrechter Verlauf unter konservativer Therapie"],
+        ["stabil",               "Klinisch und laborchemisch stabile Situation"],
+        ["Verschlechterung",     "Klinische Befundverschlechterung"],
+        ["auf Behandlungspfad",  "Verlauf entsprechend dem Behandlungspfad"],
+        ["präoperativ",          "Präoperativ"]
+      ]}
+    ]},
+
+    { knopf:"Z.n. Operation", satz:"Z.n. {z}{d}", felder:[
+      { name:"z", art:"text", hinweis:"Eingriff", breit:true },
+      { name:"d", art:"text", hinweis:"Datum", freiwillig:true, davor:" am ", mittel:true }
+    ]},
+
+    { knopf:"Tag stationär", satz:"{n}. Tag des stationären Aufenthaltes", felder:[
+      { name:"n", art:"zahl", hinweis:"Tg" }
+    ]},
+
+    { knopf:"Keine Komplikationszeichen", satz:"Kein Anhalt für postoperative Komplikationen" },
+
+    { knopf:"Wundheilung", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Primär heilende Wundverhältnisse", optionen:[
+        ["primär",        "Primär heilende Wundverhältnisse"],
+        ["sekundär",      "Sekundär heilende Wunde"],
+        ["abgeschlossen", "Wundheilung abgeschlossen"],
+        ["unter VAC",     "Wundkonditionierung unter VAC-Therapie, Wundgrund zunehmend granuliert"],
+        ["Infektsanierung","Fortschreitende Infektsanierung unter Spül-VAC-Therapie"]
+      ]}
+    ]}
+
+  ]},
+
+  { gruppe:"Probleme", bausteine:[
+
+    /* Mehrfachauswahl OHNE einzelsaetze → alles in einem "V.a."-Satz. */
+    { knopf:"Verdacht auf", satz:"V.a. {z}", felder:[
+      { name:"z", art:"mehrfachauswahl", eigeneEingabe:true, optionen:[
+        ["Wundinfekt",            "Wundinfektion"],
+        ["Wundheilungsstörung",   "Wundheilungsstörung"],
+        ["Ileus",                 "paralytischen Ileus"],
+        ["Abszess",               "intraabdominellen Abszess"],
+        ["Anastomoseninsuffizienz","Anastomoseninsuffizienz"],
+        ["Nahtinsuffizienz",      "Nahtinsuffizienz"],
+        ["Nachblutung",           "postoperative Nachblutung"],
+        ["HWI",                   "Harnwegsinfekt"],
+        ["Pneumonie",             "postoperative Pneumonie"],
+        ["Gallenleck",            "Gallenleck"],
+        ["Pankreasfistel",        "postoperative Pankreasfistel"],
+        ["Lymphfistel",           "Lymphfistel"],
+        ["Katheterinfektion",     "katheterassoziierte Infektion"],
+        ["TVT",                   "tiefe Beinvenenthrombose"]
+      ]}
+    ]},
+
+    /* Mehrfachauswahl MIT einzelsaetze → jede Auswahl wird ein eigener Satz. */
+    { knopf:"Problem", satz:"{z}", felder:[
+      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
+        "Verzögerter Kostaufbau",
+        "Postoperative Darmatonie",
+        "Gesicherte Wundinfektion",
+        "Postoperatives Serom",
+        "Postoperatives Wundhämatom",
+        "Fasziendehiszenz",
+        "Platzbauch",
+        "Postoperative Anämie",
+        "Postoperatives Delir",
+        "Postoperative Übelkeit und Erbrechen (PONV)",
+        "Elektrolytentgleisung",
+        "Akute Nierenfunktionseinschränkung",
+        "Hypervolämie",
+        "Tachykardes Vorhofflimmern",
+        "Hypertensive Entgleisung",
+        "Malnutrition",
+        "Verzögerte Mobilisation",
+        "Unzureichende Schmerzkontrolle",
+        "Sepsis"
+      ]}
+    ]}
+
+  ]},
+
+  { gruppe:"Beurteilung / Ziel", bausteine:[
+
+    { knopf:"Antibiose", satz:"Antibiotische Therapie {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"zeigt Wirkung", optionen:[
+        ["wirksam",            "zeigt Wirkung"],
+        ["Deeskalation möglich","kann deeskaliert werden"],
+        ["ohne Ansprechen",    "zeigt bislang kein Ansprechen"]
+      ]}
+    ]},
+
+    { knopf:"Vorgehen", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Fortführung des konservativen Vorgehens", optionen:[
+        ["konservativ",  "Fortführung des konservativen Vorgehens"],
+        ["OP-Indikation","OP-Indikation gestellt"],
+        ["abwartend",    "Zunächst abwartendes Vorgehen unter engmaschiger Kontrolle"]
+      ]}
+    ]},
+
+    { knopf:"Entlassfähigkeit", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"{P} ist entlassfähig", optionen:[
+        ["entlassfähig",     "{P} ist entlassfähig"],
+        ["noch nicht",       "{P} ist aktuell noch nicht entlassfähig"],
+        ["Anschlussversorgung","Anschlussversorgung erforderlich"]
+      ]}
+    ]},
+
+    { knopf:"Drainage kann entfernt werden", satz:"Drainage kann entfernt werden" },
+
+    { knopf:"Kostaufbau steigerbar", satz:"Kostaufbau kann gesteigert werden" },
+
+    { knopf:"Interdisziplinär", satz:"Weiterbehandlung interdisziplinär{z}", felder:[
+      { name:"z", art:"text", hinweis:"Fachrichtung",
+        freiwillig:true, davor:" gemeinsam mit ", breit:true }
+    ]},
+
+    { knopf:"Palliative Situation", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Palliative Behandlungssituation", optionen:[
+        ["palliativ",          "Palliative Behandlungssituation"],
+        ["Best Supportive Care","Best-Supportive-Care-Konzept"]
+      ]}
+    ]}
+
+  ]}
+]},
+
+
+/* ════════════════════════════ P – PROCEDERE ══════════════════════════════
+   Was als Nächstes zu tun ist.                                            */
+P:{ name:"Procedere", gruppen:[
+
+  { gruppe:"Wunde / Drainagen / Zugänge", bausteine:[
+
+    { knopf:"Verbandswechsel", satz:"Verbandswechsel {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"heute", eigeneEingabe:true, optionen:[
+        ["heute","heute"], ["morgen","morgen"], ["täglich","täglich"],
+        ["jeden 2. Tag","jeden zweiten Tag"]
+      ]}
+    ]},
+
+    { knopf:"VAC-Wechsel", satz:"VAC-Wechsel {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"im OP anmelden", eigeneEingabe:true, optionen:[
+        ["im OP anmelden",   "im OP anmelden"],
+        ["heute",            "heute"],
+        ["morgen",           "morgen"],
+        ["Spül-VAC fortführen","als Spül-VAC fortführen"]
+      ]}
+    ]},
+
+    { knopf:"Wundvisite anmelden", satz:"Wundvisite anmelden" },
+
+    { knopf:"Fadenzug / Klammern", satz:"Fadenzug bzw. Klammerentfernung{n}", felder:[
+      { name:"n", art:"zahl", hinweis:"POD",
+        freiwillig:true, davor:" am ", danach:". postoperativen Tag" }
+    ]},
+
+    { knopf:"Drainage", mehrfach:true, satz:"{d}{s} {z}", felder:[
+      { name:"d", art:"auswahl", titel:"Art", vorgabe:"Drainage",
+        eigeneEingabe:true, optionen:DRAIN },
+      FELD_SEITE,
+      { name:"z", art:"auswahl", titel:"Vorgehen", vorgabe:"entfernen", optionen:[
+        ["entfernen","entfernen"],
+        ["belassen", "vorerst belassen"],
+        ["anspülen", "anspülen"]
+      ]}
+    ]},
+
+    { knopf:"Zugang / Katheter", satz:"{z}", felder:[
+      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
+        "PVK entfernen",
+        "PVK wechseln",
+        "ZVK entfernen",
+        "ZVK wechseln",
+        "Blasenkatheter entfernen, Miktionskontrolle",
+        "Magensonde entfernen",
+        "PDK entfernen"
+      ]}
+    ]}
+
+  ]},
+
+  { gruppe:"Therapie", bausteine:[
+
+    { knopf:"Kost", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Kostaufbau fortführen", optionen:[
+        ["Aufbau fortführen","Kostaufbau fortführen"],
+        ["Aufbau beginnen",  "Kostaufbau beginnen"],
+        ["Vollkost",         "Umstellung auf Vollkost"],
+        ["Nahrungskarenz",   "Weiterhin Nahrungskarenz"],
+        ["Trinken erlaubt",  "Trinken erlaubt"]
+      ]}
+    ]},
+
+    { knopf:"Analgesie", satz:"Analgesie {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"anpassen", optionen:[
+        ["anpassen",    "anpassen"],
+        ["reduzieren",  "schrittweise reduzieren"],
+        ["intensivieren","intensivieren"]
+      ]}
+    ]},
+
+    { knopf:"Antibiose", satz:"Antibiotische Therapie{m} {z}{d}", felder:[
+      { name:"m", art:"text", hinweis:"Präparat", freiwillig:true, davor:" mit ", breit:true },
+      { name:"d", art:"text", hinweis:"bis", freiwillig:true, davor:" bis ", mittel:true },
+      { name:"z", art:"auswahl", vorgabe:"fortführen", optionen:[
+        ["fortführen",      "fortführen"],
+        ["auf p.o. umstellen","auf orale Gabe umstellen"],
+        ["beenden",         "beenden"],
+        ["beginnen",        "beginnen"]
+      ]}
+    ]},
+
+    { knopf:"Weiteres", satz:"{z}", felder:[
+      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
+        "Parenterale Ernährung fortführen",
+        "Mobilisation intensivieren",
+        "Physiotherapie anmelden",
+        "Atemtherapie anmelden",
+        "Ein- und Ausfuhrbilanzierung",
+        "Thromboseprophylaxe anpassen",
+        "Abführmaßnahmen einleiten"
+      ]}
+    ]},
+
+    { knopf:"EK transfundieren", satz:"{n}Erythrozytenkonzentrat(e) transfundieren", felder:[
+      { name:"n", art:"zahl", hinweis:"Anz.", freiwillig:true, danach:" " }
+    ]}
+
+  ]},
+
+  { gruppe:"Diagnostik", bausteine:[
+
+    { knopf:"Laborkontrolle", satz:"Laborkontrolle {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"morgen früh", eigeneEingabe:true, optionen:[
+        ["morgen früh","morgen früh"],
+        ["heute",      "im Verlauf heute"],
+        ["täglich",    "täglich"],
+        ["übermorgen", "übermorgen"]
+      ]}
+    ]},
+
+    { knopf:"Sonographie", satz:"Sonographie {z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"des Abdomens", eigeneEingabe:true, optionen:[
+        ["Abdomen",     "des Abdomens"],
+        ["Leiste re.",  "der Leiste rechts"],
+        ["Leiste li.",  "der Leiste links"],
+        ["Wundgebiet",  "des Wundgebietes"],
+        ["Hämatom",     "zum Hämatomausschluss"],
+        ["Serom",       "zur Seromkontrolle"],
+        ["Abszess",     "zum Abszessausschluss"],
+        ["Nieren",      "der Nieren und ableitenden Harnwege"],
+        ["Gallenwege",  "der Gallenblase und Gallenwege"],
+        ["Beinvenen",   "der Beinvenen zum TVT-Ausschluss"],
+        ["Restharn",    "zur Restharnbestimmung"]
+      ]}
+    ]},
+
+    { knopf:"CT anmelden", satz:"CT {r}{k} anmelden", felder:[
+      { name:"r", art:"auswahl", titel:"Region", vorgabe:"Abdomen", eigeneEingabe:true,
+        optionen:["Abdomen","Abdomen und Becken","Thorax","Thorax und Abdomen","Hals","Schädel"] },
+      { name:"k", art:"auswahl", titel:"Kontrast", freiwillig:true, davor:" ",
+        optionen:["nativ","mit Kontrastmittel","mit KM i.v. und oral",
+                  "in venöser Phase","in arterieller Phase"] }
+    ]},
+
+    { knopf:"Weitere Diagnostik", satz:"{z}", felder:[
+      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
+        "Röntgen-Thorax anmelden",
+        "Wundabstrich zur mikrobiologischen Diagnostik",
+        "Blutkulturen abnehmen",
+        "Urinkultur abnehmen",
+        "EKG schreiben",
+        "Histologischen Befund abwarten",
+        "Röntgen-Abdomen anmelden"
+      ]}
+    ]}
+
+  ]},
+
+  { gruppe:"Organisation / Entlassung", bausteine:[
+
+    { knopf:"Rücksprache", satz:"{z}", felder:[
+      { name:"z", art:"auswahl", vorgabe:"Rücksprache mit dem Oberarzt/der Oberärztin",
+        eigeneEingabe:true, optionen:[
+        ["Oberarzt",      "Rücksprache mit dem Oberarzt/der Oberärztin"],
+        ["Kurvenvisite",  "Entscheidung im Rahmen der Kurvenvisite"],
+        ["Tumorkonferenz","Vorstellung in der interdisziplinären Tumorkonferenz"]
+      ]}
+    ]},
+
+    { knopf:"Konsil anmelden", satz:"Konsil{z} anmelden", felder:[
+      { name:"z", art:"text", hinweis:"Fachrichtung", freiwillig:true, davor:" ", breit:true }
+    ]},
+
+    { knopf:"Organisation", satz:"{z}", felder:[
+      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
+        "Sozialdienst einschalten",
+        "Anschlussheilbehandlung beantragen",
+        "Häusliche Versorgung klären",
+        "Ambulanten Pflegedienst organisieren",
+        "Ambulante Wundbehandlung organisieren",
+        "Gespräch mit den Angehörigen",
+        "Entlassungsbrief und Rezepte vorbereiten"
+      ]}
+    ]},
+
+    { knopf:"Entlassung", satz:"Entlassung {z}{d}", felder:[
+      { name:"d", art:"text", hinweis:"Datum", freiwillig:true, davor:" ", mittel:true },
+      { name:"z", art:"auswahl", vorgabe:"bahnen", optionen:[
+        ["bahnen","bahnen"], ["heute","heute"], ["morgen","morgen"],
+        ["geplant für","geplant für"]
+      ]}
+    ]},
+
+    { knopf:"Wiedervorstellung", satz:"{z}{n}", felder:[
+      { name:"n", art:"zahl", hinweis:"Wo", freiwillig:true, davor:" in ", danach:" Wochen" },
+      { name:"z", art:"auswahl", vorgabe:"Wiedervorstellung in der chirurgischen Ambulanz",
+        eigeneEingabe:true, optionen:[
+        ["chir. Ambulanz",  "Wiedervorstellung in der chirurgischen Ambulanz"],
+        ["Hausarzt",        "Vorstellung beim Hausarzt zur Wundkontrolle"],
+        ["Wundsprechstunde","Vorstellung in der Wundsprechstunde"]
+      ]}
+    ]},
+
+    { knopf:"Verlegung", satz:"Verlegung{z} veranlassen", felder:[
+      { name:"z", art:"text", hinweis:"Station", freiwillig:true, davor:" auf ", breit:true }
+    ]}
+
+  ]}
+]},
+
+
+/* ═══════════════════════ FM – EINLIEGENDES FREMDMATERIAL ═════════════════
+   Erscheint als eigener Abschnitt am Ende der Dokumentation.
+   Alle Materialien sind "mehrfach" – man kann also z.B. drei PVK getrennt
+   erfassen. Aufbau immer gleich:
+       Material (Lokalisation) für Indikation, Indikation, Planung
+   Beispiel:
+       PVK (Unterarm li.) für Antibiose, wird heute entfernt
+   Das Planungsfeld steckt in FELD_PLAN weiter oben – dort ergänzt, wirkt
+   eine Änderung bei allen Materialien gleichzeitig.                       */
+M:{ name:"Fremdmaterial", gruppen:[
+
+  /* gruppe:"" bedeutet: ohne Zwischenüberschrift anzeigen.
+     "alleinstehend" schaltet beim Anklicken alle anderen Bausteine dieses
+     Reiters ab – und wird selbst abgeschaltet, sobald ein Material gewählt
+     wird. Statt der Aufzählung erscheint dann nur dieser eine Satz.        */
+  { gruppe:"", bausteine:[
+    { knopf:"Kein Fremdmaterial", alleinstehend:true,
+      satz:"Kein einliegendes Fremdmaterial" }
+  ]},
+
+  { gruppe:"Gefäßzugänge", bausteine:[
+
+    { knopf:"PVK", mehrfach:true, satz:"PVK{loc}{ind}{plan}", felder:[
+      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true, optionen:[
+        "Handrücken re.","Handrücken li.","Unterarm re.","Unterarm li.",
+        "Ellenbeuge re.","Ellenbeuge li.","Oberarm re.","Oberarm li.",
+        "Fußrücken re.","Fußrücken li." ]},
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true, optionen:[
+        "Antibiose","Schmerztherapie","Volumentherapie","Medikamentengabe",
+        "Kontrastmittelgabe" ]},
+      FELD_PLAN
+    ]},
+
+    { knopf:"ZVK", mehrfach:true, satz:"ZVK{loc}{ind}{plan}", felder:[
+      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true, optionen:[
+        "V. jugularis int. re.","V. jugularis int. li.","V. subclavia re.",
+        "V. subclavia li.","V. femoralis re.","V. femoralis li." ]},
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true, optionen:[
+        "Antibiose","Parenterale Ernährung","Volumentherapie","Medikamentengabe",
+        "Blutentnahme" ]},
+      FELD_PLAN
+    ]},
+
+    { knopf:"Port", mehrfach:true, satz:"Portkatheter{loc}{ind}{plan}", felder:[
+      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true,
+        optionen:["Thorax re.","Thorax li.","Oberarm re.","Oberarm li."] },
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true,
+        optionen:["Chemotherapie","Antibiose","Parenterale Ernährung","Blutentnahme"] },
+      FELD_PLAN
+    ]},
+
+    { knopf:"Midline / PICC", mehrfach:true, satz:"Midline-Katheter{loc}{ind}{plan}", felder:[
+      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true,
+        optionen:["Oberarm re.","Oberarm li."] },
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true,
+        optionen:["Antibiose","Parenterale Ernährung","Medikamentengabe","Blutentnahme"] },
+      FELD_PLAN
+    ]}
+
+  ]},
+
+  { gruppe:"Drainagen", bausteine:[
+
+    { knopf:"Drainage", mehrfach:true, satz:"{art}{loc}{ind}{plan}", felder:[
+      { name:"art", art:"auswahl", titel:"Art", vorgabe:"Drainage",
+        eigeneEingabe:true, optionen:[
+        "Drainage","Redon-Drainage","Blake-Drainage","Easy-Flow-Drainage",
+        "Robinson-Drainage","Zieldrainage","Lasche","Thoraxdrainage","T-Drainage" ]},
+      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true, optionen:[
+        "Oberbauch re.","Oberbauch li.","Unterbauch re.","Unterbauch li.","Mittelbauch",
+        "subhepatisch","subphrenisch re.","subphrenisch li.","Milzloge","Douglas-Raum",
+        "Wundgebiet","Leiste re.","Leiste li.","Axilla re.","Axilla li.",
+        "Bülau re.","Bülau li.","Ductus choledochus" ]},
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true, optionen:[
+        "Ableitung von Wundsekret","Sekretkontrolle","Blutungskontrolle",
+        "Insuffizienzkontrolle","Abszessdrainage","Galleableitung","Luftableitung",
+        "Pleuraerguss" ]},
+      FELD_PLAN
+    ]},
+
+    { knopf:"VAC / Spül-VAC", mehrfach:true, satz:"{art}{loc}{ind}{plan}", felder:[
+      { name:"art", art:"auswahl", titel:"Art", vorgabe:"VAC-System",
+        optionen:["VAC-System","Spül-VAC","Endo-SPONGE"] },
+      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true, optionen:[
+        "Wundgebiet","Oberbauch","Unterbauch","Laparostoma","Rektum","Anastomose",
+        "präsakral","Leiste re.","Leiste li." ]},
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true, optionen:[
+        "Wundkonditionierung","Ableitung von Wundsekret","Infektsanierung",
+        "Instillationstherapie","Anastomoseninsuffizienz","Vorbereitung Sekundärverschluss" ]},
+      FELD_PLAN
+    ]}
+
+  ]},
+
+  { gruppe:"Sonden / Katheter", bausteine:[
+
+    { knopf:"Blasenkatheter", mehrfach:true, satz:"Blasenkatheter{loc}{ind}{plan}", felder:[
+      { name:"loc", art:"auswahl", titel:"Lage", freiwillig:true,
+        davor:" (", danach:")", optionen:["transurethral","suprapubisch"] },
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true,
+        optionen:["Harnableitung","Bilanzierung","Harnverhalt"] },
+      FELD_PLAN
+    ]},
+
+    { knopf:"Magensonde / PEG", mehrfach:true, satz:"{art}{loc}{ind}{plan}", felder:[
+      { name:"art", art:"auswahl", titel:"Art", vorgabe:"Magensonde",
+        optionen:["Magensonde","PEG-Sonde"] },
+      { name:"loc", art:"auswahl", titel:"Lage", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true,
+        optionen:["nasogastral re.","nasogastral li.","oral","Oberbauch li."] },
+      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
+        davor:" für ", eigeneEingabe:true, optionen:[
+        "Magenentlastung","Ableitung von Magensekret","Enterale Ernährung",
+        "Medikamentengabe" ]},
+      FELD_PLAN
+    ]},
+
+    { knopf:"Schmerzkatheter / PDK", mehrfach:true,
+      satz:"{art}{loc} für Schmerztherapie{plan}", felder:[
+      { name:"art", art:"auswahl", titel:"Art", vorgabe:"Periduralkatheter",
+        optionen:["Periduralkatheter","Regionaler Schmerzkatheter"] },
+      { name:"loc", art:"auswahl", titel:"Lage", freiwillig:true,
+        davor:" (", danach:")", eigeneEingabe:true, optionen:[
+        "thorakal","lumbal","BWK 7/8","BWK 9/10","LWK 2/3","Wundgebiet",
+        "Leiste re.","Leiste li." ]},
+      FELD_PLAN
+    ]},
+
+    { knopf:"Ureterschiene (DJ)", mehrfach:true,
+      satz:"Ureterschiene (DJ){loc} für Harnableitung{plan}", felder:[
+      { name:"loc", art:"auswahl", titel:"Seite", freiwillig:true,
+        davor:" ", optionen:SEITE },
+      FELD_PLAN
+    ]}
+
+  ]}
+]}
+
+};  /* ← Ende der BAUSTEINE. Ab hier beginnt die Programmlogik. */
+/*@@BAUSTEINE_END@@*/
+
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║                                                                       ║
+   ║   A B   H I E R   P R O G R A M M L O G I K                           ║
+   ║                                                                       ║
+   ║   Diese Hälfte muss zum Anpassen der Bausteine nicht verändert        ║
+   ║   werden. Sie ist trotzdem kommentiert, falls doch einmal etwas       ║
+   ║   grundlegend anders funktionieren soll.                              ║
+   ║                                                                       ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+
+/* ═════════════════════════════ ZUSTAND ═══════════════════════════════════
+   Alles, was gerade angeklickt ist, steht in "gewaehlt". Nichts davon wird
+   gespeichert – beim Neuladen ist alles weg (siehe Datenschutz im README).
+   Ausnahme: die Teilnehmer der Visite überleben „Zurücksetzen", damit man
+   eine Runde lang denselben Stab nicht jedes Mal neu eintippen muss.       */
+
+const REITER = ["S","O","A","P","M"];
+
+/* gewaehlt[bausteinId] = { eintraege: [ {feldname: wert, ...}, ... ] }
+   Auch Bausteine ohne "mehrfach" haben genau einen Eintrag – das hält die
+   Verarbeitung an allen Stellen gleich.                                    */
+const gewaehlt = {};
+
+const freitext = { S:"", O:"", A:"", P:"", M:"" };
+let   reiter   = "S";          // welcher Reiter gerade offen ist
+let   fliesstext = true;       // true = Fließtext, false = Stichpunkte
+let   anrede   = "Patient";    // Schalter M/W
+let   handBearbeitet = false;  // Vorschau manuell getippt (bis nächster Baustein-Klick)
+let   teilnehmerArt  = "namen"; // "namen" | "oa" | "ca" – überlebt Zurücksetzen
+let   teilnehmerText = "";      // Freitext – überlebt Zurücksetzen, nicht das Neuladen
+
+/* Jeder Baustein bekommt eine eindeutige Kennung aus Reiter, Gruppe und
+   Position – z.B. "O1_3". Sie wird nur intern verwendet.                   */
+function idsNeuVergeben(){
+  REITER.forEach(r =>
+    BAUSTEINE[r].gruppen.forEach((g, gi) =>
+      g.bausteine.forEach((b, bi) => { b.id = r + gi + "_" + bi; })));
+}
+idsNeuVergeben();
+
+const $ = s => document.querySelector(s);
+
+/* Schützt Text, der ins HTML eingesetzt wird (z.B. spitze Klammern). */
+const esc = s => String(s).replace(/[&<>"]/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+/* Eine Option ist entweder "Text" oder ["Aufschrift","Ausgabetext"].
+   Diese Funktion macht daraus immer ein Paar.                              */
+const paar = o => Array.isArray(o) ? o : [o, o];
+
+/* Ist das Feld eine Auswahlreihe (im Gegensatz zu einem Eingabefeld)? */
+const istAuswahl = f => f.art === "auswahl" || f.art === "mehrfachauswahl";
+
+
+/* ═════════════════════════ SELBSTPRÜFUNG ════════════════════════════════
+   Läuft einmal beim Start und meldet Unstimmigkeiten im Katalog, ohne die
+   Anwendung anzuhalten. Erspart die Suche nach stillen Fehlern.            */
+
+function pruefeBausteine(){
+  const probleme = [];
+  REITER.forEach(r => BAUSTEINE[r].gruppen.forEach(g => g.bausteine.forEach(b => {
+    const wo = r + " · " + g.gruppe + " · " + b.knopf;
+    const felder = b.felder || [];
+    const satz = b.satz || "";
+
+    /* Jedes Feld braucht seinen Platzhalter im Satz, sonst wäre die Eingabe
+       wirkungslos. */
+    felder.forEach(f => {
+      if(!f.name)  return probleme.push(wo + ": ein Feld hat kein \"name\"");
+      if(!satz.includes("{" + f.name + "}"))
+        probleme.push(wo + ": Feld \"" + f.name + "\" kommt im Satz nicht vor – "
+                    + "fehlt dort {" + f.name + "} ?");
+      if(istAuswahl(f) && !(f.optionen && f.optionen.length))
+        probleme.push(wo + ": Feld \"" + f.name + "\" ist eine Auswahl ohne \"optionen\"");
+      if(f.vorgabe && istAuswahl(f) &&
+         !f.optionen.some(o => paar(o)[1] === f.vorgabe))
+        probleme.push(wo + ": \"vorgabe\" von \"" + f.name
+                    + "\" kommt in keiner Option vor – auf genaue Schreibweise achten");
+    });
+
+    /* Und umgekehrt: jeder Platzhalter braucht sein Feld. */
+    (satz.match(/\{(\w+)\}/g) || []).forEach(p => {
+      const n = p.slice(1, -1);
+      if(n === "P") return;                       // {P} ist immer erlaubt
+      if(!felder.some(f => f.name === n))
+        probleme.push(wo + ": Platzhalter " + p + " hat kein passendes Feld");
+    });
+
+    if(!satz) probleme.push(wo + ": kein \"satz\" angegeben");
+  })));
+
+  if(!probleme.length){
+    const box = $("#pruefung");
+    if(box){ box.hidden = true; box.innerHTML = ""; }
+    return;
+  }
+  const box = $("#pruefung");
+  box.hidden = false;
+  box.innerHTML = "<b>Hinweis: In den Bausteinen stimmt etwas nicht "
+    + "(die Anwendung läuft trotzdem)</b><ul>"
+    + probleme.map(p => "<li>" + esc(p) + "</li>").join("") + "</ul>";
+}
+
+
+/* ═════════════════════════ REITERLEISTE ═════════════════════════════════ */
+
+function zeichneReiter(){
+  $("#tabs").innerHTML = REITER.map(r => {
+    const n = anzahlIm(r);
+    return `<button class="tab" role="tab" data-s="${r}" aria-selected="${r===reiter}">`
+         + `<span class="k">${r==="M" ? "FM" : r}</span>`
+         + `<span>${BAUSTEINE[r].name}</span>`
+         + `<span class="n ${n ? "on" : ""}">${n}</span></button>`;
+  }).join("");
+}
+
+/* Zahl im Reiter: aktive Einträge plus ggf. der Freitext. */
+function anzahlIm(r){
+  let n = 0;
+  BAUSTEINE[r].gruppen.forEach(g => g.bausteine.forEach(b => {
+    if(gewaehlt[b.id]) n += gewaehlt[b.id].eintraege.length;
+  }));
+  if(freitext[r].trim()) n++;
+  return n;
+}
+
+
+/* ═══════════════════════ BAUSTEINE ZEICHNEN ═════════════════════════════ */
+
+/* Ein einzelnes Feld: entweder eine Reihe Auswahlknöpfe oder ein Eingabefeld. */
+function feldHTML(b, f, eintrag, nr){
+  const bez = name => `data-id="${b.id}" data-n="${nr}" data-k="${name}"`;
+
+  if(istAuswahl(f)){
+    const wert = eintrag[f.name];
+    const aktiv = v => f.art === "mehrfachauswahl"
+                     ? (wert || []).includes(v)
+                     : wert === v;
+    return `<span class="prow">`
+      + (f.titel ? `<span class="ihd">${esc(f.titel)}:</span>` : "")
+      + f.optionen.map(o => {
+          const [aufschrift, ausgabe] = paar(o);
+          return `<span class="pill${aktiv(ausgabe) ? " on" : ""}" ${bez(f.name)} `
+               + `data-val="${esc(ausgabe)}">${esc(aufschrift)}</span>`;
+        }).join("")
+      /* "eigeneEingabe" hängt ein Freitextfeld an die Reihe. Sein Wert wird
+         unter feldname + "_f" gespeichert.                                 */
+      + (f.eigeneEingabe
+          ? `<input class="f s" ${bez(f.name + "_f")} type="text" placeholder="sonstige" `
+          + `value="${esc(eintrag[f.name + "_f"] || "")}">`
+          : "")
+      + `</span>`;
+  }
+
+  const klasse = "f" + (f.breit ? " w" : "") + (f.mittel ? " s" : "");
+  return `<input class="${klasse}" ${bez(f.name)} placeholder="${esc(f.hinweis || "")}" `
+       + `value="${esc(eintrag[f.name] || "")}" `
+       + `type="${f.art === "zahl" ? "number" : "text"}" `
+       + `inputmode="${f.art === "zahl" ? "decimal" : "text"}">`;
+}
+
+/* Ein Eintrag eines Bausteins. Bei mehreren Einträgen bekommt jeder eine
+   Nummer und ein × zum Entfernen.                                          */
+function eintragHTML(b, eintrag, nr, mehrere){
+  const felder   = b.felder || [];
+  const eingaben = felder.filter(f => !istAuswahl(f))
+                         .map(f => feldHTML(b, f, eintrag, nr)).join("");
+  const reihen   = felder.filter(istAuswahl)
+                         .map(f => feldHTML(b, f, eintrag, nr)).join("");
+  if(!mehrere) return eingaben + reihen;
+  return `<span class="inst">`
+    + `<span class="irow"><span class="ihd">#${nr + 1}</span>`
+    + `<span class="pill del" data-del="${b.id}" data-n="${nr}" `
+    + `title="Diesen Eintrag entfernen">×</span>`
+    + eingaben + `</span>` + reihen
+    + `</span>`;
+}
+
+function bausteinHTML(b){
+  const st = gewaehlt[b.id], an = !!st;
+  let inhalt = `<span class="lbl">${esc(b.knopf)}</span>`;
+  if(an){
+    const mehrere = st.eintraege.length > 1;
+    if(mehrere) inhalt += `<span class="cnt">${st.eintraege.length}×</span>`;
+    inhalt += st.eintraege.map((e, i) => eintragHTML(b, e, i, mehrere)).join("");
+    if(b.mehrfach) inhalt += `<span class="pill add" data-add="${b.id}">+ weiterer Eintrag</span>`;
+  }
+  return `<div class="chip${an ? " on" : ""}" data-id="${b.id}" role="button" `
+       + `tabindex="0" aria-pressed="${an}">${inhalt}</div>`;
+}
+
+function zeichneInhalt(){
+  $("#main").innerHTML =
+    BAUSTEINE[reiter].gruppen.map(g =>
+      `<section class="grp">`
+      + (g.gruppe ? `<h2>${esc(g.gruppe)}</h2>` : "")   /* gruppe:"" = ohne Überschrift */
+      + `<div class="chips">`
+      + g.bausteine.map(bausteinHTML).join("") + `</div></section>`
+    ).join("")
+    + `<section class="grp"><h2>Freitext ${esc(BAUSTEINE[reiter].name)}</h2>`
+    + `<textarea class="free" id="freetext" placeholder="Individuelle Ergänzung – `
+    + `wird an die ausgewählten Bausteine angehängt">${esc(freitext[reiter])}</textarea></section>`;
+}
+
+/* Alles neu zeichnen. "haltePosition" bewahrt die Scrollposition, damit der
+   Bildschirm bei einem Klick nicht springt.                                */
+function zeichne(haltePosition){
+  const y = haltePosition ? $("#main").scrollTop : 0;
+  zeichneReiter();
+  zeichneInhalt();
+  $("#main").scrollTop = y;
+  aktualisiere();
+}
+
+
+/* ═══════════════════════════ BEDIENUNG ══════════════════════════════════ */
+
+function findeBaustein(id){
+  for(const g of BAUSTEINE[id[0]].gruppen)
+    for(const b of g.bausteine)
+      if(b.id === id) return b;
+  return null;
+}
+
+/* Ein neuer, leerer Eintrag – mit den Vorgabewerten vorbelegt. Genau das
+   sorgt dafür, dass ein Klick meistens schon einen fertigen Satz ergibt.   */
+function neuerEintrag(b){
+  const e = {};
+  (b.felder || []).forEach(f => {
+    if(f.vorgabe) e[f.name] = f.art === "mehrfachauswahl" ? [f.vorgabe] : f.vorgabe;
+  });
+  return e;
+}
+
+function umschalten(id){
+  const b = findeBaustein(id);
+  if(gewaehlt[id]){
+    delete gewaehlt[id];
+  } else {
+    /* "nurEines": alle anderen Bausteine derselben Gruppe abwählen. */
+    if(b.nurEines){
+      BAUSTEINE[id[0]].gruppen.forEach(g => g.bausteine.forEach(o => {
+        if(o.nurEines === b.nurEines && gewaehlt[o.id]) delete gewaehlt[o.id];
+      }));
+    }
+    /* "alleinstehend" (z.B. "Kein Fremdmaterial") verträgt sich mit nichts
+       anderem in diesem Reiter – in beide Richtungen. */
+    BAUSTEINE[id[0]].gruppen.forEach(g => g.bausteine.forEach(o => {
+      if(!gewaehlt[o.id] || o.id === id) return;
+      if(b.alleinstehend || o.alleinstehend) delete gewaehlt[o.id];
+    }));
+    gewaehlt[id] = { eintraege:[ neuerEintrag(b) ] };
+  }
+  zeichne(true);
+  const feld = document.querySelector(`.chip[data-id="${id}"] .f`);
+  if(feld) feld.focus();      // Zahlenfeld gleich bereit zum Tippen
+}
+
+$("#main").addEventListener("click", e => {
+
+  /* "+ weiterer Eintrag" */
+  const add = e.target.closest("[data-add]");
+  if(add){
+    gewaehlt[add.dataset.add].eintraege.push(neuerEintrag(findeBaustein(add.dataset.add)));
+    zeichne(true); return;
+  }
+
+  /* "×" – einen Eintrag entfernen */
+  const del = e.target.closest("[data-del]");
+  if(del){
+    const st = gewaehlt[del.dataset.del];
+    st.eintraege.splice(+del.dataset.n, 1);
+    if(!st.eintraege.length) delete gewaehlt[del.dataset.del];
+    zeichne(true); return;
+  }
+
+  /* Ein Auswahlknopf */
+  const knopf = e.target.closest(".pill[data-val]");
+  if(knopf){
+    const b       = findeBaustein(knopf.dataset.id);
+    const eintrag = gewaehlt[knopf.dataset.id].eintraege[+knopf.dataset.n];
+    const f       = b.felder.find(x => x.name === knopf.dataset.k);
+    const wert    = knopf.dataset.val;
+
+    if(f.art === "mehrfachauswahl"){
+      const liste = eintrag[f.name] || (eintrag[f.name] = []);
+      const i = liste.indexOf(wert);
+      if(i < 0) liste.push(wert); else liste.splice(i, 1);
+    } else {
+      /* Eine Pflichtauswahl lässt sich nicht abwählen – sonst entstünde
+         beim Antippen des bereits aktiven Knopfes unbemerkt eine Lücke.   */
+      eintrag[f.name] = (eintrag[f.name] === wert && f.freiwillig) ? "" : wert;
+      /* Auswahl schlägt Freitext: das Feld "sonstige" wird geleert. */
+      if(eintrag[f.name]) eintrag[f.name + "_f"] = "";
+    }
+    zeichne(true); return;
+  }
+
+  /* Klick ins Eingabefeld soll den Baustein nicht abwählen */
+  if(e.target.closest(".f") || e.target.closest(".free")) return;
+
+  const chip = e.target.closest(".chip");
+  if(chip) umschalten(chip.dataset.id);
+});
+
+/* Bausteine sind auch per Tastatur bedienbar (Tab, dann Leertaste/Enter). */
+$("#main").addEventListener("keydown", e => {
+  if(e.target.classList.contains("chip") && (e.key === "Enter" || e.key === " ")){
+    e.preventDefault();
+    umschalten(e.target.dataset.id);
+  }
+});
+
+/* Tippen in einem Eingabefeld */
+$("#main").addEventListener("input", e => {
+  if(e.target.id === "freetext"){
+    freitext[reiter] = e.target.value;
+    zeichneReiter();
+    aktualisiere();
+    return;
+  }
+  if(!e.target.classList.contains("f")) return;
+
+  const st = gewaehlt[e.target.dataset.id];
+  if(!st) return;
+  const eintrag = st.eintraege[+e.target.dataset.n];
+  const name    = e.target.dataset.k;
+  eintrag[name] = e.target.value;
+
+  /* Freitext in einer Einfachauswahl hebt die angeklickte Vorgabe auf,
+     sonst bliebe die Eingabe wirkungslos.                                 */
+  if(name.endsWith("_f") && e.target.value.trim()){
+    const basis = name.slice(0, -2);
+    const f = (findeBaustein(e.target.dataset.id).felder || [])
+                .find(x => x.name === basis);
+    if(f && f.art === "auswahl" && eintrag[basis]){
+      eintrag[basis] = "";
+      const aktiv = e.target.parentNode.querySelector(".pill.on");
+      if(aktiv) aktiv.classList.remove("on");
+    }
+  }
+  aktualisiere();
+});
+
+$("#tabs").addEventListener("click", e => {
+  const t = e.target.closest(".tab");
+  if(t){ reiter = t.dataset.s; zeichne(false); }
+});
+
+
+/* ═══════════════════════════ TEXTAUFBAU ═════════════════════════════════ */
+
+/* Räumt einen fertigen Satz auf: doppelte Leerzeichen, leere Klammern,
+   Leerzeichen vor Satzzeichen, Kommas am Anfang oder Ende.                 */
+function saeubere(s){
+  return s.replace(/\s+/g, " ")
+          .replace(/\(\s*\)/g, "")
+          .replace(/\s+([,.;:)])/g, "$1")
+          .replace(/\(\s+/g, "(")
+          .replace(/^[\s,;]+/, "")
+          .replace(/[\s,;]+$/, "")
+          .replace(/\s+/g, " ")
+          .trim();
+}
+
+/* Der Wert eines Feldes als Text. "ersatz" wird beim Aufteilen einer
+   Mehrfachauswahl in Einzelsätze benutzt.                                  */
+function feldWert(f, eintrag, ersatz){
+  if(ersatz && (f.name in ersatz)) return ersatz[f.name];
+
+  const eigen = (eintrag[f.name + "_f"] || "").trim();
+
+  if(f.art === "mehrfachauswahl"){
+    const liste = (eintrag[f.name] || []).slice();
+    if(eigen) liste.push(eigen);
+    return liste.join(f.trenner || ", ");
+  }
+  return (eintrag[f.name] || "").trim() || eigen;
+}
+
+/* Setzt einen Satz aus Vorlage und Werten zusammen. */
+function baueSatz(b, eintrag, ersatz){
+  const nachName = {};
+  (b.felder || []).forEach(f => nachName[f.name] = f);
+
+  let offen = false;   // Pflicht-Mehrfachauswahl, aus der nichts gewählt ist
+
+  const roh = (b.satz || b.knopf).replace(/\{(\w+)\}/g, (ganz, name) => {
+    if(name === "P") return anrede;
+    const f = nachName[name];
+    if(!f) return ganz;
+
+    const wert = feldWert(f, eintrag, ersatz);
+    /* "davor" und "danach" erscheinen nur, wenn wirklich etwas drinsteht. */
+    if(wert) return (f.davor || "") + wert + (f.danach || "");
+    if(f.freiwillig) return "";
+    /* Eine Auswahlliste ohne Auswahl ist keine halbe Aussage, sondern noch
+       gar keine – der Baustein liefert dann nichts statt einer Lücke.     */
+    if(f.art === "mehrfachauswahl"){ offen = true; return ""; }
+    return "___";      // hier fehlt eine Pflichtangabe
+  });
+
+  /* {P} kann auch innerhalb eines Auswahltextes stehen. */
+  return offen ? "" : saeubere(roh.replace(/\{P\}/g, anrede));
+}
+
+/* Alle Sätze eines Bausteins – bei "mehrfach" einer je Eintrag, bei
+   "einzelsaetze" einer je gewählter Option.                                */
+function saetzeVon(b){
+  const raus = [];
+  const einzel = (b.felder || []).find(f => f.einzelsaetze);
+
+  gewaehlt[b.id].eintraege.forEach(eintrag => {
+    if(einzel){
+      const liste = (eintrag[einzel.name] || []).slice();
+      const eigen = (eintrag[einzel.name + "_f"] || "").trim();
+      if(eigen) liste.push(eigen);
+      if(liste.length){
+        liste.forEach(v => raus.push(baueSatz(b, eintrag, { [einzel.name]: v })));
+        return;
+      }
+    }
+    raus.push(baueSatz(b, eintrag));
+  });
+
+  /* Bausteine, die nur Werte tragen (z.B. Vitalwerte), liefern ohne Eingabe
+     nichts – sie erscheinen dann gar nicht statt als leerer Satz.          */
+  return raus.filter(x => x);
+}
+
+/* Alle Sätze eines Reiters, in der Reihenfolge des Katalogs, plus Freitext. */
+function saetzeImReiter(r){
+  const raus = [];
+  BAUSTEINE[r].gruppen.forEach(g => g.bausteine.forEach(b => {
+    if(gewaehlt[b.id]) raus.push(...saetzeVon(b));
+  }));
+  const f = freitext[r].trim();
+  if(f) f.split(/\n+/).map(x => x.trim()).filter(Boolean)
+         .forEach(x => raus.push(x.replace(/\.$/, "")));
+  return raus;
+}
+
+/* Ist in diesem Reiter ein "alleinstehender" Baustein aktiv? */
+function alleinstehendAktiv(r){
+  return BAUSTEINE[r].gruppen.some(g =>
+    g.bausteine.some(b => b.alleinstehend && gewaehlt[b.id]));
+}
+
+function datumText(){
+  const d = $("#datum").value;
+  if(!d) return "";
+  const [j, m, t] = d.split("-");
+  return `${t}.${m}.${j}`;
+}
+
+const istLeitungsvisite = art => art === "oa" || art === "ca";
+const visitenartName = art => art === "oa" ? "Oberarztvisite" : art === "ca" ? "Chefarztvisite" : "Visite";
+const teilnehmerGesetzt = () => !!(teilnehmerText || "").trim() || istLeitungsvisite(teilnehmerArt);
+
+/* Kopf der Dokumentation: Visitenart, Datum, optional Teilnehmer.
+   Die Teilnehmerangabe hängt nicht am Formularstand und bleibt deshalb
+   beim Zurücksetzen stehen.                                                */
+function kopfzeilen(){
+  const datum = datumText();
+  const namen = (teilnehmerText || "").trim();
+  if(istLeitungsvisite(teilnehmerArt)){
+    const art = visitenartName(teilnehmerArt);
+    return [namen
+      ? "Chirurgische " + art + " vom " + datum + " mit " + namen
+      : "Chirurgische " + art + " vom " + datum];
+  }
+  const kopf = ["Chirurgische Visite vom " + datum];
+  if(namen) kopf.push("Teilnehmer: " + namen);
+  return kopf;
+}
+
+function aktualisiereTeilnehmerKnopf(){
+  const knopf = $("#teilnehmer");
+  const an = teilnehmerGesetzt();
+  knopf.classList.toggle("on", an);
+  const namen = (teilnehmerText || "").trim();
+  knopf.title = an
+    ? (istLeitungsvisite(teilnehmerArt)
+        ? visitenartName(teilnehmerArt) + " mit " + (namen || "…")
+            + " – bleibt beim Zurücksetzen erhalten"
+        : "Teilnehmer: " + namen
+            + " – bleibt beim Zurücksetzen erhalten")
+    : "Teilnehmer der Visite – bleibt beim Zurücksetzen erhalten";
+}
+
+/* Genau ein Satzpunkt, auch wenn die Eingabe selbst auf einen Punkt endet
+   (z.B. ein Datum wie "01.08.").                                           */
+const mitPunkt = x => x.replace(/\.+$/, "") + ".";
+
+/* Der vollständige Text. Im Fließtext-Modus ohne Leerzeilen. */
+function ganzerText(){
+  const zeilen = kopfzeilen();
+  if(!fliesstext) zeilen.push("");
+
+  ["S","O","A","P"].forEach(r => {
+    const s = saetzeImReiter(r);
+    if(!s.length) return;
+    if(fliesstext){
+      zeilen.push(r + ": " + s.map(mitPunkt).join(" "));
+    } else {
+      zeilen.push(r + " – " + BAUSTEINE[r].name + ":");
+      s.forEach(x => zeilen.push("- " + x));
+    }
+  });
+
+  const fm = saetzeImReiter("M");
+  if(fm.length){
+    if(!fliesstext) zeilen.push("");
+    /* "Kein Fremdmaterial" ersetzt die Aufzählung – es wäre unsinnig, das
+       als einzigen Punkt unter der Überschrift zu führen. */
+    if(alleinstehendAktiv("M")){
+      zeilen.push(fm.map(mitPunkt).join(" "));
+    } else {
+      zeilen.push("Einliegendes Fremdmaterial:");
+      fm.forEach(x => zeilen.push("- " + x));
+    }
+  }
+  return zeilen.join("\n");
+}
+
+
+/* ═══════════════════════ VORSCHAU UND AUSGABE ═══════════════════════════ */
+
+/* Fassung für die Zwischenablage: <div> je Zeile, erste Zeile fett und
+   unterstrichen. So kommt die Formatierung im KIS an.                      */
+function alsHTML(t){
+  let kopf = false;
+  return t.split("\n").map(z => {
+    if(!z.trim()) return "<div><br></div>";
+    if(!kopf){ kopf = true; return `<div><b><u>${esc(z)}</u></b></div>`; }
+    return `<div>${esc(z)}</div>`;
+  }).join("");
+}
+
+/* Fassung für die Anzeige: echte Zeilenumbrüche, damit der sichtbare Text
+   zeichengenau dem entspricht, was kopiert wird. Die orange Markierung der
+   Lücken entsteht erst nach dem Schützen und bleibt dadurch auf die
+   Anzeige beschränkt – sie landet nie in der Zwischenablage.               */
+function alsAnzeige(t){
+  let kopf = false;
+  return t.split("\n").map(z => {
+    if(!z.trim()) return "";
+    if(!kopf){ kopf = true; return `<span class="h">${esc(z)}</span>`; }
+    return esc(z);
+  }).join("\n").replace(/___/g, '<span class="gap">___</span>');
+}
+
+/* Was tatsächlich kopiert wird: der von Hand bearbeitete Text, falls die
+   Vorschau gerade manuell angepasst ist – sonst der automatische Aufbau.
+   Baustein-Klicks bauen die Vorschau wieder automatisch auf.               */
+const aktuellerText = () =>
+  handBearbeitet ? $("#out").innerText.replace(/\n+$/, "") : ganzerText();
+
+const nichtsGewaehlt = () => !REITER.some(r => saetzeImReiter(r).length);
+
+/* Zählt offene Pflichtangaben und blendet den Hinweis ein. */
+function zaehleLuecken(){
+  const n = (aktuellerText().match(/___/g) || []).length;
+  const el = $("#gaps");
+  el.hidden = !n;
+  el.textContent = n === 1 ? "1 Lücke offen" : n + " Lücken offen";
+}
+
+function setzeHandBearbeitung(an){
+  handBearbeitet = an;
+  $("#out").classList.toggle("edit", an);
+  $("#edited").hidden = !an;
+  $("#resync").hidden = !an;
+}
+
+/* Baut die Vorschau aus den Bausteinen neu auf. Manuelle Tipparbeit in der
+   Vorschau wird dabei bewusst ersetzt – so bleiben Baustein-Klicks aktiv.  */
+function aktualisiere(){
+  if(handBearbeitet) setzeHandBearbeitung(false);
+  $("#hint").hidden = !nichtsGewaehlt();
+  $("#out").innerHTML = alsAnzeige(ganzerText());
+  zaehleLuecken();
+}
+
+/* Tippen in der Vorschau erlaubt Feinschliff vor dem Kopieren. Der nächste
+   Baustein-Klick (oder „Neu aufbauen") übernimmt wieder den Automatiktext. */
+$("#out").addEventListener("input", () => {
+  if(!handBearbeitet) setzeHandBearbeitung(true);
+  $("#hint").hidden = true;
+  zaehleLuecken();     // kein Neuaufbau des Feldes – der Cursor bleibt stehen
+});
+
+function wiederAufbauen(){
+  aktualisiere();
+}
+$("#resync").addEventListener("click", wiederAufbauen);
+
+
+/* ═══════════════════════ ZWISCHENABLAGE ═════════════════════════════════
+   Drei Wege, absteigend nach Komfort. Der erste klappt in modernen
+   Browsern über https, der zweite auch bei einer lokal geöffneten Datei,
+   der dritte markiert wenigstens den Text.                                 */
+
+async function kopiere(){
+  const text = aktuellerText() + "\n";
+  const html = alsHTML(aktuellerText());
+  let ok = false;
+
+  /* 1. Moderne Zwischenablage: liefert Formatierung UND reinen Text
+        gleichzeitig – das KIS nimmt sich, was es versteht.                 */
+  try{
+    if(navigator.clipboard && window.ClipboardItem && window.isSecureContext){
+      await navigator.clipboard.write([ new ClipboardItem({
+        "text/html":  new Blob([html], { type:"text/html" }),
+        "text/plain": new Blob([text], { type:"text/plain" })
+      })]);
+      ok = true;
+    }
+  }catch(e){ /* weiter mit Weg 2 */ }
+
+  /* 2. Ältere Methode über einen unsichtbaren Bereich – funktioniert auch,
+        wenn die Datei direkt von der Festplatte geöffnet wurde.            */
+  if(!ok){
+    const buehne = $("#stage");
+    buehne.innerHTML = html;
+    buehne.focus();
+    const bereich = document.createRange();
+    bereich.selectNodeContents(buehne);
+    const auswahl = window.getSelection();
+    auswahl.removeAllRanges();
+    auswahl.addRange(bereich);
+    try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+    auswahl.removeAllRanges();
+    buehne.innerHTML = "";
+  }
+
+  /* 3. Notnagel: Text markieren, damit Strg+C bzw. Cmd+C genügt. */
+  if(!ok){
+    const bereich = document.createRange();
+    bereich.selectNodeContents($("#out"));
+    const auswahl = window.getSelection();
+    auswahl.removeAllRanges();
+    auswahl.addRange(bereich);
+  }
+
+  const knopf = $("#copy");
+  knopf.textContent = ok ? "✓ Kopiert" : "Markiert – jetzt ⌘/Strg+C";
+  knopf.classList.toggle("done", ok);
+  setTimeout(() => {
+    knopf.textContent = "In Zwischenablage";
+    knopf.classList.remove("done");
+  }, ok ? 1800 : 4000);
+}
+$("#copy").addEventListener("click", kopiere);
+
+
+/* ═════════════════════════ SCHALTFLÄCHEN ════════════════════════════════ */
+
+$("#geschlecht").addEventListener("click", e => {
+  const b = e.target.closest(".segb");
+  if(!b) return;
+  anrede = b.dataset.g;
+  [...$("#geschlecht").children].forEach(c => c.classList.toggle("on", c === b));
+  aktualisiere();
+});
+
+$("#modus").addEventListener("click", () => {
+  fliesstext = !fliesstext;
+  $("#modus").textContent = fliesstext ? "Fließtext" : "Stichpunkte";
+  aktualisiere();
+});
+
+$("#reset").addEventListener("click", () => {
+  if(!confirm("Alle Eingaben verwerfen?")) return;
+  Object.keys(gewaehlt).forEach(k => delete gewaehlt[k]);
+  REITER.forEach(r => freitext[r] = "");
+  reiter = "S";
+  wiederAufbauen();
+  zeichne(false);
+});
+
+$("#datum").addEventListener("change", aktualisiere);
+
+/* ═════════════════════════ TEILNEHMER ═══════════════════════════════════
+   Eingabe über den Kopfzeilen-Knopf. Der Text hängt nicht am Formular,
+   deshalb bleibt er beim Zurücksetzen stehen – erst Neuladen leert ihn.   */
+
+function tnDialogArt(){
+  const an = $("#tn-modes").querySelector(".dlg-mode.on");
+  return (an && an.dataset.art) || "namen";
+}
+
+function tnDialogBeschriftung(){
+  const art = tnDialogArt();
+  const leitung = istLeitungsvisite(art);
+  $("#tn-lab").textContent = leitung ? "mit" : "Teilnehmer";
+  $("#tn-text").placeholder = art === "ca"
+    ? "z. B. CA Prof. Meier"
+    : art === "oa"
+      ? "z. B. OA Dr. Müller"
+      : "z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier";
+}
+
+function oeffneTeilnehmer(){
+  $("#tn-modes").querySelectorAll(".dlg-mode").forEach(b =>
+    b.classList.toggle("on", b.dataset.art === teilnehmerArt));
+  $("#tn-text").value = teilnehmerText;
+  tnDialogBeschriftung();
+  $("#tn-dlg").hidden = false;
+  $("#tn-text").focus();
+  $("#tn-text").select();
+}
+
+function schliesseTeilnehmer(){
+  $("#tn-dlg").hidden = true;
+}
+
+function uebernehmeTeilnehmer(){
+  teilnehmerArt = tnDialogArt();
+  teilnehmerText = $("#tn-text").value.trim();
+  schliesseTeilnehmer();
+  aktualisiereTeilnehmerKnopf();
+  aktualisiere();
+}
+
+function leereTeilnehmer(){
+  teilnehmerArt = "namen";
+  teilnehmerText = "";
+  schliesseTeilnehmer();
+  aktualisiereTeilnehmerKnopf();
+  aktualisiere();
+}
+
+$("#teilnehmer").addEventListener("click", oeffneTeilnehmer);
+$("#tn-ok").addEventListener("click", uebernehmeTeilnehmer);
+$("#tn-cancel").addEventListener("click", schliesseTeilnehmer);
+$("#tn-clear").addEventListener("click", leereTeilnehmer);
+$("#tn-modes").addEventListener("click", e => {
+  const b = e.target.closest(".dlg-mode");
+  if(!b) return;
+  $("#tn-modes").querySelectorAll(".dlg-mode").forEach(c =>
+    c.classList.toggle("on", c === b));
+  tnDialogBeschriftung();
+  $("#tn-text").focus();
+});
+$("#tn-dlg").addEventListener("click", e => {
+  if(e.target.id === "tn-dlg") schliesseTeilnehmer();
+});
+$("#tn-text").addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); uebernehmeTeilnehmer(); }
+});
+
+/* Höhe der Vorschau per Griffleiste ziehen – mit Maus, Stift und Finger. */
+(function(){
+  const griff = $("#grip"), feld = $("#out"), leiste = document.querySelector(".fbar");
+  const STANDARD = 190;                  // Ausgangshöhe, auch Ziel des Doppelklicks
+  let startY = 0, startH = 0, zieht = false, bewegt = false;
+
+  /* Obergrenze aus den tatsächlichen Leistenhöhen, damit immer ein Streifen
+     Bausteine sichtbar bleibt und nichts aus dem Fenster läuft.            */
+  function grenze(h){
+    const belegt = document.querySelector("header").offsetHeight
+                 + document.querySelector("nav").offsetHeight
+                 + griff.offsetHeight + leiste.offsetHeight
+                 + (feld.offsetHeight - feld.clientHeight) + 24;
+    return Math.max(60, Math.min(document.documentElement.clientHeight - belegt - 120, h));
+  }
+  const setze = h => { feld.style.height = grenze(h) + "px"; };
+
+  griff.addEventListener("pointerdown", e => {
+    zieht = true; bewegt = false;
+    startY = e.clientY; startH = feld.offsetHeight;
+    griff.classList.add("drag");
+    griff.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  griff.addEventListener("pointermove", e => {
+    if(!zieht) return;
+    if(Math.abs(e.clientY - startY) > 2) bewegt = true;   // reiner Klick ändert nichts
+    if(bewegt) setze(startH - (e.clientY - startY));
+  });
+  const ende = () => { zieht = false; griff.classList.remove("drag"); };
+  griff.addEventListener("pointerup", ende);
+  griff.addEventListener("pointercancel", ende);
+  griff.addEventListener("dblclick", () => { ende(); setze(STANDARD); });
+  window.addEventListener("resize", () => setze(feld.offsetHeight));
+})();
+
+/* Offline-/HTML-Speichern: schreibt die aktuellen Bausteine in die Datei.
+   In Chrome/Edge (sichere Herkunft) kann direkt überschrieben werden;
+   sonst landet die Datei im Download-Ordner.                               */
+const BAUSTEINE_MARK_A = "/*@@BAUSTEINE_BEGIN@@*/";
+const BAUSTEINE_MARK_B = "/*@@BAUSTEINE_END@@*/";
+let bausteineGeaendert = false;   // Katalog geändert, HTML noch nicht gespeichert
+let dateiHandle = null;           // File-System-Access-Handle, falls vorhanden
+
+/* Kopie ohne Laufzeitfelder (id) – so landet nur Kataloginhalt in der Datei. */
+function bausteineSauber(){
+  return JSON.parse(JSON.stringify(BAUSTEINE, (k, v) => k === "id" ? undefined : v));
+}
+
+function bausteineAlsQuelltext(){
+  /* < im JSON escapen, damit der HTML-Parser kein schliessendes Script-Tag sieht. */
+  const json = JSON.stringify(bausteineSauber(), null, 2).replace(/</g, "\\u003c");
+  return BAUSTEINE_MARK_A + "\nconst BAUSTEINE = "
+       + json
+       + ";\n" + BAUSTEINE_MARK_B;
+}
+
+function htmlMitAktuellenBausteinen(){
+  const a = SELF.indexOf(BAUSTEINE_MARK_A);
+  const b = SELF.indexOf(BAUSTEINE_MARK_B);
+  if(a < 0 || b < 0 || b < a)
+    throw new Error("Speichermarkierungen in der Datei fehlen.");
+  return SELF.slice(0, a) + bausteineAlsQuelltext() + SELF.slice(b + BAUSTEINE_MARK_B.length);
+}
+
+async function speichereHTML(){
+  await originalQuelleBereit;
+  const html = htmlMitAktuellenBausteinen();
+  const blob = new Blob([html], { type:"text/html;charset=utf-8" });
+
+  /* Bevorzugt: echte Datei auf dem PC (File System Access API). */
+  if(window.showSaveFilePicker){
+    try{
+      if(!dateiHandle){
+        dateiHandle = await window.showSaveFilePicker({
+          suggestedName: "visitendokumentation.html",
+          types:[{ description:"HTML", accept:{ "text/html":[".html"] } }]
+        });
+      }
+      const writable = await dateiHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      bausteineGeaendert = false;
+      return "gespeichert";
+    } catch(err){
+      if(err && err.name === "AbortError") return "abgebrochen";
+      dateiHandle = null;   /* Handle ungültig → Download-Fallback */
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "visitendokumentation.html";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  bausteineGeaendert = false;
+  return "download";
+}
+
+function speichernKurzfeedback(ziel, art){
+  if(!ziel) return;
+  const alt = ziel.textContent;
+  ziel.textContent = art === "gespeichert" ? "✓ Gespeichert"
+                   : art === "download"    ? "✓ Heruntergeladen"
+                   : art === "abgebrochen" ? "Abgebrochen"
+                   : "Fehler";
+  setTimeout(() => { ziel.textContent = alt; }, 1800);
+}
+
+$("#save").addEventListener("click", async () => {
+  try{
+    const art = await speichereHTML();
+    speichernKurzfeedback($("#save"), art);
+  } catch(err){
+    alert("Speichern fehlgeschlagen: " + (err && err.message ? err.message : err));
+  }
+});
+
+
+/* ═══════════════════════ BAUSTEIN-EDITOR ════════════════════════════════
+   Ermöglicht Hinzufügen, Ändern und Entfernen ohne Texteditor.
+   Strukturänderungen leeren die aktuelle Auswahl (IDs ändern sich).        */
+
+let edReiter = "S";
+let edZiel = null;   /* { art:"baustein"|"gruppe"|"neu"|"neugruppe", gi, bi } */
+
+function katalogGeaendert(struktur){
+  bausteineGeaendert = true;
+  if(struktur){
+    Object.keys(gewaehlt).forEach(k => delete gewaehlt[k]);
+    idsNeuVergeben();
+  }
+  pruefeBausteine();
+}
+
+function oeffneEditor(){
+  edReiter = reiter;
+  edZiel = null;
+  const box = $("#editor");
+  box.classList.add("open");
+  box.setAttribute("aria-hidden", "false");
+  zeichneEditor();
+}
+
+function schliesseEditor(){
+  $("#editor").classList.remove("open");
+  $("#editor").setAttribute("aria-hidden", "true");
+  edZiel = null;
+  $("#ed-form").hidden = true;
+  $("#ed-form").innerHTML = "";
+  idsNeuVergeben();
+  zeichne(false);
+}
+
+function zeichneEdReiter(){
+  $("#ed-tabs").innerHTML = REITER.map(r =>
+    `<button class="tab" type="button" data-s="${r}" aria-selected="${r===edReiter}">`
+    + `<span class="k">${r==="M" ? "FM" : r}</span>`
+    + `<span>${esc(BAUSTEINE[r].name)}</span></button>`
+  ).join("");
+}
+
+function zeichneEdListe(){
+  const gruppen = BAUSTEINE[edReiter].gruppen;
+  let html = "";
+  if(!gruppen.length)
+    html = `<p class="ed-empty">Noch keine Gruppe in diesem Reiter.</p>`;
+
+  gruppen.forEach((g, gi) => {
+    html += `<section class="ed-grp" data-gi="${gi}">`
+      + `<div class="ed-grp-hd">`
+      + `<h2>${esc(g.gruppe || "(ohne Überschrift)")}</h2>`
+      + `<button type="button" class="btn sm" data-ed="edit-grp" data-gi="${gi}">Gruppe</button>`
+      + `<button type="button" class="btn sm warn" data-ed="del-grp" data-gi="${gi}" `
+      + `title="Gruppe und alle Bausteine darin löschen">Löschen</button>`
+      + `</div>`;
+
+    if(!g.bausteine.length)
+      html += `<p class="ed-empty">Keine Bausteine in dieser Gruppe.</p>`;
+
+    g.bausteine.forEach((b, bi) => {
+      html += `<div class="ed-row">`
+        + `<span class="nm">${esc(b.knopf)}</span>`
+        + `<span class="sz" title="${esc(b.satz || "")}">${esc(b.satz || "")}</span>`
+        + `<button type="button" class="btn sm" data-ed="edit" data-gi="${gi}" data-bi="${bi}">Bearbeiten</button>`
+        + `<button type="button" class="btn sm warn" data-ed="del" data-gi="${gi}" data-bi="${bi}">Löschen</button>`
+        + `</div>`;
+    });
+
+    html += `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">`
+      + `<button type="button" class="btn sm" data-ed="add" data-gi="${gi}">+ Baustein</button>`
+      + `</div></section>`;
+  });
+
+  html += `<div style="margin-top:8px">`
+    + `<button type="button" class="btn" data-ed="add-grp">+ Neue Gruppe</button>`
+    + `</div>`;
+
+  $("#ed-list").innerHTML = html;
+}
+
+function optionenAlsText(opts){
+  return (opts || []).map(o => {
+    const [a, s] = paar(o);
+    return a === s ? a : a + " | " + s;
+  }).join("\n");
+}
+
+function textAlsOptionen(text){
+  return text.split("\n").map(z => z.trim()).filter(Boolean).map(z => {
+    const i = z.indexOf("|");
+    if(i < 0) return z;
+    const a = z.slice(0, i).trim();
+    const s = z.slice(i + 1).trim();
+    return a === s ? a : [a, s];
+  });
+}
+
+function zeichneEdForm(){
+  const form = $("#ed-form");
+  if(!edZiel){ form.hidden = true; form.innerHTML = ""; return; }
+  form.hidden = false;
+
+  if(edZiel.art === "gruppe" || edZiel.art === "neugruppe"){
+    const name = edZiel.art === "gruppe"
+      ? (BAUSTEINE[edReiter].gruppen[edZiel.gi].gruppe || "")
+      : "";
+    form.innerHTML =
+      `<h3>${edZiel.art === "neugruppe" ? "Neue Gruppe" : "Gruppe umbenennen"}</h3>`
+      + `<label for="ed-grp-name">Überschrift</label>`
+      + `<input type="text" id="ed-grp-name" value="${esc(name)}" `
+      + `placeholder="leer = ohne Überschrift">`
+      + `<p class="ed-hint">Leer lassen, wenn die Gruppe keine Zwischenüberschrift haben soll.</p>`
+      + `<div class="ed-actions">`
+      + `<button type="button" class="btn primary" data-ed="save-form">Übernehmen</button>`
+      + `<button type="button" class="btn" data-ed="cancel-form">Abbrechen</button>`
+      + `</div>`;
+    return;
+  }
+
+  let b;
+  if(edZiel.art === "neu"){
+    b = edZiel._stub || { knopf:"", satz:"", mehrfach:false, alleinstehend:false, nurEines:"", felder:[] };
+  } else {
+    b = BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi];
+  }
+
+  const felderHtml = (b.felder || []).map((f, fi) => {
+    const artLabel = f.art === "mehrfachauswahl" ? "Mehrfachauswahl"
+                   : f.art === "auswahl" ? "Auswahl"
+                   : f.art === "zahl" ? "Zahl" : "Text";
+    let extra = "";
+    if(istAuswahl(f)){
+      extra = `<label>Optionen (eine je Zeile; optional „Aufschrift | Satzteil")</label>`
+            + `<textarea data-ed-opt="${fi}" rows="5">${esc(optionenAlsText(f.optionen))}</textarea>`
+            + `<label>Vorgabe (Satzteil, exakt)</label>`
+            + `<input type="text" data-ed-vorgabe="${fi}" value="${esc(f.vorgabe || "")}">`;
+    } else {
+      extra = `<label>Platzhalter im leeren Feld</label>`
+            + `<input type="text" data-ed-hinweis="${fi}" value="${esc(f.hinweis || "")}">`
+            + `<label>Vorgabe</label>`
+            + `<input type="text" data-ed-vorgabe="${fi}" value="${esc(f.vorgabe || "")}">`;
+    }
+    return `<div class="ed-field" data-fi="${fi}">`
+      + `<div class="ed-field-hd"><strong>${esc(f.name)} · ${artLabel}</strong>`
+      + `<button type="button" class="btn sm warn" data-ed="del-field" data-fi="${fi}">Feld weg</button></div>`
+      + `<label>Text davor / danach (nur wenn ausgefüllt)</label>`
+      + `<div style="display:flex;gap:6px">`
+      + `<input type="text" data-ed-davor="${fi}" value="${esc(f.davor || "")}" placeholder="davor">`
+      + `<input type="text" data-ed-danach="${fi}" value="${esc(f.danach || "")}" placeholder="danach">`
+      + `</div>`
+      + `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+      + `<input type="checkbox" data-ed-frei="${fi}" ${f.freiwillig ? "checked" : ""}> freiwillig (darf leer bleiben)</label>`
+      + (istAuswahl(f)
+          ? `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+            + `<input type="checkbox" data-ed-eigene="${fi}" ${f.eigeneEingabe ? "checked" : ""}> eigene Eingabe („sonstige")</label>`
+          : "")
+      + (f.art === "mehrfachauswahl"
+          ? `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+            + `<input type="checkbox" data-ed-einzeln="${fi}" ${f.einzelsaetze ? "checked" : ""}> jede Auswahl eigener Satz</label>`
+          : "")
+      + extra
+      + `</div>`;
+  }).join("");
+
+  form.innerHTML =
+    `<h3>${edZiel.art === "neu" ? "Neuer Baustein" : "Baustein bearbeiten"}</h3>`
+    + `<label for="ed-knopf">Knopfaufschrift</label>`
+    + `<input type="text" id="ed-knopf" value="${esc(b.knopf || "")}">`
+    + `<label for="ed-satz">Satz (ohne Punkt am Ende; Platzhalter wie {z})</label>`
+    + `<textarea id="ed-satz" rows="3">${esc(b.satz || "")}</textarea>`
+    + `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+    + `<input type="checkbox" id="ed-mehrfach" ${b.mehrfach ? "checked" : ""}> mehrfach anlegbar</label>`
+    + `<label class="ed-check" style="text-transform:none;letter-spacing:0;font-weight:400">`
+    + `<input type="checkbox" id="ed-allein" ${b.alleinstehend ? "checked" : ""}> alleinstehend (schließt andere im Reiter aus)</label>`
+    + `<label for="ed-nureines">Ausschlussgruppe (nurEines)</label>`
+    + `<input type="text" id="ed-nureines" value="${esc(b.nurEines || "")}" `
+    + `placeholder="z.B. schmerz – leer = keine">`
+    + `<label>Felder</label>`
+    + (felderHtml || `<p class="ed-empty">Keine Felder – der Satz steht fest.</p>`)
+    + `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="auswahl">+ Auswahl</button>`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="mehrfachauswahl">+ Mehrfachauswahl</button>`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="text">+ Textfeld</button>`
+    + `<button type="button" class="btn sm" data-ed="add-field" data-art="zahl">+ Zahlenfeld</button>`
+    + `</div>`
+    + `<p class="ed-hint">Neue Felder brauchen einen Namen (z.B. z) und denselben Platzhalter im Satz: {z}.</p>`
+    + `<div class="ed-actions">`
+    + `<button type="button" class="btn primary" data-ed="save-form">Übernehmen</button>`
+    + `<button type="button" class="btn" data-ed="cancel-form">Abbrechen</button>`
+    + `</div>`;
+}
+
+function zeichneEditor(){
+  zeichneEdReiter();
+  zeichneEdListe();
+  zeichneEdForm();
+}
+
+function liesFelderAusForm(alteFelder){
+  const form = $("#ed-form");
+  const felder = [];
+  form.querySelectorAll(".ed-field").forEach((box, fi) => {
+    const alt = (alteFelder || [])[fi] || { name:"z", art:"auswahl", optionen:[] };
+    const f = {
+      name: alt.name,
+      art: alt.art
+    };
+    if(alt.titel) f.titel = alt.titel;
+    const davor = box.querySelector("[data-ed-davor]");
+    const danach = box.querySelector("[data-ed-danach]");
+    if(davor && davor.value) f.davor = davor.value;
+    if(danach && danach.value) f.danach = danach.value;
+    if(box.querySelector("[data-ed-frei]")?.checked) f.freiwillig = true;
+    if(box.querySelector("[data-ed-eigene]")?.checked) f.eigeneEingabe = true;
+    if(box.querySelector("[data-ed-einzeln]")?.checked) f.einzelsaetze = true;
+    if(alt.breit) f.breit = true;
+    if(alt.mittel) f.mittel = true;
+    if(alt.trenner) f.trenner = alt.trenner;
+
+    const vorgabe = box.querySelector("[data-ed-vorgabe]");
+    if(vorgabe && vorgabe.value.trim()) f.vorgabe = vorgabe.value.trim();
+
+    if(istAuswahl(f)){
+      const opt = box.querySelector("[data-ed-opt]");
+      f.optionen = textAlsOptionen(opt ? opt.value : "");
+    } else {
+      const hinweis = box.querySelector("[data-ed-hinweis]");
+      if(hinweis && hinweis.value.trim()) f.hinweis = hinweis.value.trim();
+    }
+    felder.push(f);
+  });
+  return felder;
+}
+
+function naechsterFeldname(felder){
+  const benutzt = new Set((felder || []).map(f => f.name));
+  const kandidaten = ["z","n","q","d","m","i","ort","s","plan","x","y","a","b","c"];
+  for(const k of kandidaten) if(!benutzt.has(k)) return k;
+  let i = 1;
+  while(benutzt.has("f" + i)) i++;
+  return "f" + i;
+}
+
+function uebernehmeForm(){
+  if(!edZiel) return;
+
+  if(edZiel.art === "neugruppe"){
+    const name = ($("#ed-grp-name").value || "").trim();
+    BAUSTEINE[edReiter].gruppen.push({ gruppe:name, bausteine:[] });
+    katalogGeaendert(true);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+  if(edZiel.art === "gruppe"){
+    BAUSTEINE[edReiter].gruppen[edZiel.gi].gruppe =
+      ($("#ed-grp-name").value || "").trim();
+    katalogGeaendert(false);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+
+  const knopf = ($("#ed-knopf").value || "").trim();
+  const satz  = ($("#ed-satz").value || "").trim();
+  if(!knopf){ alert("Bitte eine Knopfaufschrift angeben."); return; }
+  if(!satz){ alert("Bitte einen Satz angeben."); return; }
+
+  const altFelder = edZiel.art === "neu"
+    ? ((edZiel._stub && edZiel._stub.felder) || [])
+    : (BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi].felder || []);
+  const felder = liesFelderAusForm(altFelder);
+
+  const neu = { knopf, satz };
+  if($("#ed-mehrfach").checked) neu.mehrfach = true;
+  if($("#ed-allein").checked) neu.alleinstehend = true;
+  const nur = ($("#ed-nureines").value || "").trim();
+  if(nur) neu.nurEines = nur;
+  if(felder.length) neu.felder = felder;
+
+  if(edZiel.art === "neu"){
+    BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine.push(neu);
+    katalogGeaendert(true);
+  } else {
+    const ziel = BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi];
+    const id = ziel.id;
+    Object.keys(ziel).forEach(k => { if(k !== "id") delete ziel[k]; });
+    Object.assign(ziel, neu);
+    if(id) ziel.id = id;
+    /* Auswahl zu diesem Baustein verwerfen – Felder können sich geändert haben */
+    if(gewaehlt[id]) delete gewaehlt[id];
+    katalogGeaendert(false);
+  }
+  edZiel = null;
+  zeichneEditor();
+}
+
+$("#edit-bausteine").addEventListener("click", oeffneEditor);
+$("#ed-close").addEventListener("click", schliesseEditor);
+
+$("#ed-save").addEventListener("click", async () => {
+  try{
+    const art = await speichereHTML();
+    speichernKurzfeedback($("#ed-save"), art);
+  } catch(err){
+    alert("Speichern fehlgeschlagen: " + (err && err.message ? err.message : err));
+  }
+});
+
+$("#ed-tabs").addEventListener("click", e => {
+  const t = e.target.closest(".tab");
+  if(!t) return;
+  edReiter = t.dataset.s;
+  edZiel = null;
+  zeichneEditor();
+});
+
+$("#ed-list").addEventListener("click", e => {
+  const btn = e.target.closest("[data-ed]");
+  if(!btn) return;
+  const gi = btn.dataset.gi !== undefined ? +btn.dataset.gi : null;
+  const bi = btn.dataset.bi !== undefined ? +btn.dataset.bi : null;
+  const ed = btn.dataset.ed;
+
+  if(ed === "edit"){
+    edZiel = { art:"baustein", gi, bi };
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "add"){
+    edZiel = { art:"neu", gi };
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "del"){
+    const b = BAUSTEINE[edReiter].gruppen[gi].bausteine[bi];
+    if(!confirm(`Baustein „${b.knopf}" wirklich löschen?`)) return;
+    BAUSTEINE[edReiter].gruppen[gi].bausteine.splice(bi, 1);
+    katalogGeaendert(true);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+  if(ed === "edit-grp"){
+    edZiel = { art:"gruppe", gi };
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "del-grp"){
+    const g = BAUSTEINE[edReiter].gruppen[gi];
+    const n = g.bausteine.length;
+    if(!confirm(`Gruppe „${g.gruppe || "(ohne Überschrift)"}" mit ${n} Baustein(en) löschen?`))
+      return;
+    BAUSTEINE[edReiter].gruppen.splice(gi, 1);
+    katalogGeaendert(true);
+    edZiel = null;
+    zeichneEditor();
+    return;
+  }
+  if(ed === "add-grp"){
+    edZiel = { art:"neugruppe" };
+    zeichneEdForm();
+  }
+});
+
+$("#ed-form").addEventListener("click", e => {
+  const btn = e.target.closest("[data-ed]");
+  if(!btn) return;
+  const ed = btn.dataset.ed;
+
+  if(ed === "cancel-form"){
+    edZiel = null;
+    zeichneEdForm();
+    return;
+  }
+  if(ed === "save-form"){
+    uebernehmeForm();
+    return;
+  }
+  if(ed === "del-field" || ed === "add-field"){
+    const stand = formularZwischenstand();
+    if(ed === "del-field"){
+      stand.felder.splice(+btn.dataset.fi, 1);
+    } else {
+      const art = btn.dataset.art;
+      const name = naechsterFeldname(stand.felder);
+      const neu = { name, art };
+      if(art === "auswahl" || art === "mehrfachauswahl"){
+        neu.optionen = ["Option A", "Option B"];
+        neu.vorgabe = "Option A";
+      } else {
+        neu.hinweis = art === "zahl" ? "Zahl" : "Text";
+        neu.freiwillig = true;
+      }
+      if(!stand.satz.includes("{" + name + "}"))
+        stand.satz = (stand.satz || "").trim() + "{" + name + "}";
+      stand.felder.push(neu);
+    }
+    zwischenstandAnwenden(stand);
+    zeichneEdForm();
+  }
+});
+
+/* Liest Knopf/Satz/Flags/Felder aus dem offenen Formular. */
+function formularZwischenstand(){
+  const alt = edZiel.art === "neu"
+    ? ((edZiel._stub && edZiel._stub.felder) || [])
+    : (BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi].felder || []);
+  return {
+    knopf: $("#ed-knopf").value,
+    satz: $("#ed-satz").value,
+    mehrfach: $("#ed-mehrfach").checked,
+    alleinstehend: $("#ed-allein").checked,
+    nurEines: $("#ed-nureines").value,
+    felder: liesFelderAusForm(alt)
+  };
+}
+
+function zwischenstandAnwenden(stand){
+  if(edZiel.art === "neu"){
+    edZiel._stub = stand;
+    return;
+  }
+  const ziel = BAUSTEINE[edReiter].gruppen[edZiel.gi].bausteine[edZiel.bi];
+  ziel.knopf = stand.knopf;
+  ziel.satz = stand.satz;
+  if(stand.mehrfach) ziel.mehrfach = true; else delete ziel.mehrfach;
+  if(stand.alleinstehend) ziel.alleinstehend = true; else delete ziel.alleinstehend;
+  const nur = (stand.nurEines || "").trim();
+  if(nur) ziel.nurEines = nur; else delete ziel.nurEines;
+  if(stand.felder.length) ziel.felder = stand.felder; else delete ziel.felder;
+  bausteineGeaendert = true;
+}
+
+
+document.addEventListener("keydown", e => {
+  if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); kopiere(); }
+  if(e.key === "Escape" && !$("#tn-dlg").hidden){
+    e.preventDefault();
+    schliesseTeilnehmer();
+    return;
+  }
+  if(e.key === "Escape" && $("#editor").classList.contains("open")){
+    e.preventDefault();
+    schliesseEditor();
+  }
+});
+
+/* Nichts wird serverseitig gespeichert – vor dem Verlassen warnen, solange
+   eine Visite erfasst ist oder Baustein-Änderungen noch nicht in HTML
+   geschrieben wurden. Der Datei-Download löst das nicht aus.               */
+window.addEventListener("beforeunload", e => {
+  if(bausteineGeaendert || handBearbeitet || !nichtsGewaehlt() || teilnehmerGesetzt()){
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+
+/* ══════════════════════════════ START ═══════════════════════════════════ */
+
+(function start(){
+  const d = new Date();
+  $("#datum").value = d.getFullYear() + "-"
+                    + String(d.getMonth() + 1).padStart(2, "0") + "-"
+                    + String(d.getDate()).padStart(2, "0");
+  pruefeBausteine();
+  aktualisiereTeilnehmerKnopf();
+  zeichne(false);
+})();
+</script>
+</body>
+</html>
