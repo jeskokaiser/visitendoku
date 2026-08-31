@@ -28,31 +28,6 @@ Einliegendes Fremdmaterial:
 
 Struktur nach **SOAP** plus einliegendes Fremdmaterial. Umschaltbar zwischen **Fließtext** (ein Satz pro Sektion) und **Stichpunkten** (Aufzählung mit Zwischenüberschriften).
 
-## Funktionen
-
-| | |
-|---|---|
-| **87 Bausteine** | S 16 · O 25 · A 14 · P 21 · Fremdmaterial 11 — bewusst knapp gehalten, damit ein Blick zum Finden reicht |
-| **Ein Klick = fertiger Satz** | 78 der 87 Bausteine liefern ohne jede Eingabe einen vollständigen Satz. „Abdomen" ergibt sofort „Abdomen weich.", „Antibiose" ergibt „Antibiotische Therapie fortführen." — Präparat und Datum sind Zugabe, keine Pflicht |
-| **Touch-optimiert** | Alle Schaltflächen mindestens 36 px, Bausteine 46 px — keine Dropdowns, nur antippbare Flächen |
-| **Inline-Eingaben** | Zahlen und Werte direkt im Baustein: NRS, Fördermenge, VAC-Sog, POD … |
-| **Mehrfach-Einträge** | Bauchschmerz *und* Beinschmerz, zwei Drainagen, drei PVK: Bausteine wie Schmerzen, Drainage und alle Fremdmaterialien lassen sich beliebig oft anlegen, jeder mit eigener Lokalisation und eigenen Werten |
-| **Mehrfachauswahl** | „V.a." sammelt kommagetrennt in einen Satz, „Problem" und „Organisation" erzeugen je einen eigenen Satz |
-| **Freitext überall** | Auswahlreihen mit `sonstige`-Feld übernehmen eigene Begriffe und heben die Vorauswahl auf |
-| **Sich ausschließende Bausteine** | „Schmerzfrei" wirft „Schmerzen" automatisch raus, „Stuhlgang" und „Stoma" schließen sich aus |
-| **Materialspezifische Indikationen** | Am PVK stehen nur PVK-Indikationen zur Wahl, an der Drainage nur passende |
-| **Planung am Material** | Jedes Fremdmaterial kann „wird heute entfernt", „wird morgen entfernt", „wird gewechselt" oder „bleibt vorerst belassen" tragen — je Eintrag einzeln |
-| **„Kein Fremdmaterial"** | Ein Klick ersetzt die ganze Aufzählung durch „Kein einliegendes Fremdmaterial." und schließt sich mit allen Materialien gegenseitig aus |
-| **Anrede M / W** | Steuert alle personenbezogenen Formulierungen im Text |
-| **Freitext je Sektion** | Individuelles ergänzen, wird an die geklickten Bausteine angehängt |
-| **Editierbare Vorschau** | Direkt im Vorschaufeld schreiben; der nächste Baustein-Klick (oder „↻ Neu aufbauen") übernimmt wieder den Automatiktext. Höhe über die Griffleiste ziehbar, Doppelklick setzt zurück |
-| **Lückenwarnung** | Die wenigen Bausteine, die wirklich eine Angabe brauchen (etwa „Z.n. Operation"), zeigen `___`, farbig markiert und neben „Vorschau" gezählt — damit nichts Unfertiges in die Akte wandert. Reine Auswahllisten wie „V.a." bleiben stumm, bis etwas gewählt ist |
-| **Schutz vor Datenverlust** | Da nichts gespeichert wird, fragt der Browser vor Reload oder Schließen nach, solange etwas erfasst ist |
-| **Rich-Text + Plain-Text** | Kopiert beide Formate gleichzeitig — das KIS nimmt, was es versteht |
-| **Offline-Kopie** | Button lädt die Seite als eigenständige HTML-Datei herunter |
-
-Tastatur: `⌘/Strg + Enter` kopiert.
-
 ## Nutzung
 
 **Online** — [jeskokaiser.de/visitendoku](https://jeskokaiser.de/visitendoku) aufrufen.
