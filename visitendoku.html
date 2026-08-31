@@ -22,8 +22,7 @@
                    darunter die Programmlogik – die bleibt normalerweise unberührt
   ════════════════════════════════════════════════════════════════════════════
 -->
-<html lang="de">
-<head>
+<html lang="de"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Visitendokumentation Allgemeinchirurgie</title>
@@ -357,7 +356,7 @@ footer{
 </head>
 <body>
 
-<div id="pruefung" hidden></div>
+<div id="pruefung" hidden=""></div>
 
 <header>
   <h1>Chirurgische Visite</h1>
@@ -382,10 +381,10 @@ footer{
   <div class="fbar">
     <span class="ttl">Vorschau</span>
     <span class="note" id="hint">– noch keine Bausteine ausgewählt –</span>
-    <span class="warn" id="edited" hidden>manuell angepasst · nächster Baustein-Klick übernimmt wieder</span>
-    <span class="warn" id="gaps" hidden></span>
+    <span class="warn" id="edited" hidden="">manuell angepasst · nächster Baustein-Klick übernimmt wieder</span>
+    <span class="warn" id="gaps" hidden=""></span>
     <span class="sp"></span>
-    <button class="btn" id="resync" hidden>↻ Neu aufbauen</button>
+    <button class="btn" id="resync" hidden="">↻ Neu aufbauen</button>
     <button class="btn" id="copy">In Zwischenablage</button>
   </div>
   <div id="out" contenteditable="true"></div>
@@ -393,7 +392,7 @@ footer{
 <div id="stage" contenteditable="true"></div>
 
 <!-- Teilnehmer: Overlay über der Visite, nicht über dem Baustein-Editor -->
-<div id="tn-dlg" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="tn-titel">
+<div id="tn-dlg" class="dlg" hidden="" role="dialog" aria-modal="true" aria-labelledby="tn-titel">
   <div class="dlg-card">
     <h2 id="tn-titel">Teilnehmer der Visite</h2>
     <p class="dlg-hint">Bleibt beim Zurücksetzen erhalten. Erst ein Neuladen der Datei setzt die Angabe zurück.</p>
@@ -414,8 +413,7 @@ footer{
       </div>
     </div>
     <label id="tn-lab" for="tn-text">Teilnehmer</label>
-    <input type="text" id="tn-text" autocomplete="off" spellcheck="false"
-           placeholder="z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier">
+    <input type="text" id="tn-text" autocomplete="off" spellcheck="false" placeholder="z. B. OA Dr. Müller, AA Dr. Schmidt, PJ Meier">
     <div class="dlg-actions">
       <button type="button" class="btn" id="tn-clear">Leeren</button>
       <button type="button" class="btn" id="tn-cancel">Abbrechen</button>
@@ -435,7 +433,7 @@ footer{
   <nav id="ed-tabs"></nav>
   <div class="ed-body">
     <div class="ed-list" id="ed-list"></div>
-    <aside class="ed-form" id="ed-form" hidden></aside>
+    <aside class="ed-form" id="ed-form" hidden=""></aside>
   </div>
 </div>
 
@@ -708,7 +706,7 @@ const SEKRET = ["serös", "serös-blutig", "blutig", "altblutig", "serös umgesc
    ein Klick genügt, die genaue Art ist eine Verfeinerung. */
 const DRAIN  = ["Drainage", "Redon-Drainage", "Blake-Drainage", "Easy-Flow-Drainage",
                 "Robinson-Drainage", "Zieldrainage", "Lasche", "Thoraxdrainage",
-                "Magensonde", "VAC-System", "Spül-VAC"];
+                "VAC-System", "Spül-VAC"];
 
 /* Ein komplettes, fertiges Feld – lässt sich in jeden Baustein einsetzen,
    der eine Seitenangabe braucht. Der Platzhalter dazu ist {s}. */
@@ -739,914 +737,3080 @@ const FELD_PLAN = { name:"plan", art:"auswahl", titel:"Planung",
 
 /*@@BAUSTEINE_BEGIN@@*/
 const BAUSTEINE = {
-
-/* ═════════════════════════════ S – SUBJEKTIV ═════════════════════════════
-   Was die Patientin oder der Patient berichtet.                          */
-S:{ name:"Subjektiv", gruppen:[
-
-  { gruppe:"Allgemein", bausteine:[
-
-    { knopf:"Befinden", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"{P} gibt subjektives Wohlbefinden an", optionen:[
-        ["wohl",         "{P} gibt subjektives Wohlbefinden an"],
-        ["gebessert",    "{P} fühl sich deutlich besser"],
-        ["unverändert",  "Befinden unverändert zum Vortag"],
-        ["reduziert",    "Reduziertes Allgemeinbefinden"],
-        ["abgeschlagen", "{P} klagt über Abgeschlagenheit und Müdigkeit"]
-      ]}
-    ]},
-
-    { knopf:"Angetroffen", satz:"{P} wird {z} angetroffen", felder:[
-      { name:"z", art:"auswahl", vorgabe:"liegend im Bett", optionen:[
-        ["liegend",          "liegend im Bett"],
-        ["sitzend im Bett",  "sitzend im Bett"],
-        ["sitzend am Tisch", "sitzend am Tisch"],
-        ["stehend",          "stehend"]
-      ]}
-    ]},
-
-    { knopf:"Nachtruhe", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Nachtruhe erholsam", optionen:[
-        ["erholsam", "Nachtruhe erholsam"],
-        ["unruhig",  "Unruhige Nacht"]
-      ]}
-    ]}
-
-  ]},
-
-  { gruppe:"Schmerzen", bausteine:[
-
-    /* "nurEines" sorgt dafür, dass Schmerzfrei und Schmerzen sich ausschließen. */
-    { knopf:"Schmerzfrei", nurEines:"schmerz", satz:"Schmerzfrei" },
-
-    /* Mehrfach: erlaubt z.B. Bauchschmerz UND Beinschmerz nebeneinander.
-       Ergibt z.B. "Mäßige Bauchschmerzen links, NRS 4/10".
-       Reihenfolge im Satz: Stärke – Ort – Seite – NRS.                    */
-    { knopf:"Schmerzen", nurEines:"schmerz", mehrfach:true,
-      satz:"{i}{ort}{s}{n}", felder:[
-      { name:"n", art:"zahl", hinweis:"NRS",
-        freiwillig:true, davor:", NRS ", danach:"/10" },
-      { name:"ort", art:"auswahl", titel:"Ort", vorgabe:"Wundschmerzen",
-        eigeneEingabe:true, optionen:[
-        ["Wunde",     "Wundschmerzen"],
-        ["OP-Gebiet", "Schmerzen im OP-Gebiet"],
-        ["Bauch",     "Bauchschmerzen"],
-        ["Rücken",    "Rückenschmerzen"],
-        ["Schulter",  "Schulterschmerzen"],
-        ["Steiß",    "Steißchmerzen"],
-        ["Thorax",    "Thoraxschmerzen"],
-        ["Bein",      "Beinschmerzen"],
-        ["Kopf",      "Kopfschmerzen"]
-      ]},
-      FELD_SEITE,
-      { name:"i", art:"auswahl", titel:"Stärke", freiwillig:true, danach:" ",
-        optionen:["Leichte","Mäßige","Starke","Zunehmende","Rückläufige"] }
-    ]},
-
-    { knopf:"Analgesie", satz:"Schmerzen unter aktueller Analgesie {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"gut kontrolliert", optionen:[
-        ["ausreichend",      "gut kontrolliert"],
-        ["nicht ausreichend","nicht ausreichend kontrolliert"]
-      ]}
-    ]},
-
-    { knopf:"Bedarfsanalgesie", satz:"Bedarfsanalgesie{n} benötigt", felder:[
-      { name:"n", art:"zahl", hinweis:"x",
-        freiwillig:true, davor:" ", danach:"x in den letzten 24 h" }
-    ]}
-
-  ]},
-
-  { gruppe:"Verdauung", bausteine:[
-
-    /* Stuhlgang und Stoma schließen sich aus – Stomaträger haben keinen
-       Stuhlgang im üblichen Sinn.                                        */
-    { knopf:"Stuhlgang", nurEines:"stuhl", satz:"{z}{n}", felder:[
-      { name:"n", art:"zahl", hinweis:"Tg",
-        freiwillig:true, davor:" seit ", danach:" Tagen" },
-      { name:"z", art:"auswahl", vorgabe:"Stuhlgang regelrecht", optionen:[
-        ["regelrecht",    "Stuhlgang regelrecht"],
-        ["kein Stuhlgang","Kein Stuhlgang"],
-        ["Diarrhoe",      "Diarrhoe"],
-        ["Obstipation",   "Obstipation"]
-      ]}
-    ]},
-
-    { knopf:"Stoma", nurEines:"stuhl", satz:"Stoma {z}{n}{q}", felder:[
-      { name:"n", art:"zahl", hinweis:"ml",
-        freiwillig:true, davor:", ", danach:" ml/24 h" },
-      { name:"z", art:"auswahl", vorgabe:"fördert regelrecht", optionen:[
-        ["regelrecht","fördert regelrecht"],
-        ["vermehrt",  "fördert vermehrt"],
-        ["nicht",     "fördert bisher nicht"]
-      ]},
-      { name:"q", art:"auswahl", titel:"Konsistenz", freiwillig:true, davor:", ",
-        optionen:["geformt","breiig","dünnflüssig","flüssig","wässrig","blutig"] }
-    ]},
-
-    { knopf:"Windabgang", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Windabgang vorhanden", optionen:[
-        ["vorhanden","Windabgang vorhanden"],
-        ["kein",     "Bisher kein Windabgang"]
-      ]}
-    ]},
-
-    { knopf:"Übelkeit / Erbrechen", satz:"{z}{n}", felder:[
-      { name:"n", art:"zahl", hinweis:"x",
-        freiwillig:true, davor:", ", danach:"x in 24 h" },
-      { name:"z", art:"auswahl", vorgabe:"Keine Übelkeit, kein Erbrechen", optionen:[
-        ["keine",    "Keine Übelkeit, kein Erbrechen"],
-        ["Übelkeit", "Übelkeit"],
-        ["Erbrechen","Erbrechen"]
-      ]}
-    ]},
-
-    { knopf:"Kost", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Kost wird gut vertragen", optionen:[
-        ["wird vertragen",   "Kost wird gut vertragen"],
-        ["Aufbau problemlos", "Kostaufbau verläuft problemlos"],
-        ["Aufbau langsam", "Kostaufbau langsam möglich"],
-        ["nicht vertragen",  "Kost wird nicht vertragen"],
-        ["Appetit reduziert","Appetit reduziert"],
-        ["nüchtern",         "Aktuell nüchtern"]
-      ]}
-    ]}
-
-  ]},
-
-  { gruppe:"Miktion / Mobilisation / Atmung", bausteine:[
-
-    { knopf:"Miktion", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Miktion spontan und regelrecht", optionen:[
-        ["regelrecht","Miktion spontan und regelrecht"],
-        ["Beschwerden","Miktionsbeschwerden"],
-        ["über DK",   "Harnableitung über Blasenkatheter"]
-      ]}
-    ]},
-
-    { knopf:"Mobilisation", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Selbstständig auf Station mobil", optionen:[
-        ["selbstständig","Selbstständig auf Station mobil"],
-        ["mit Hilfe",    "Mobilisation auf Station mit Unterstützung"],
-        ["Bettkante",    "Mobilisation bis an die Bettkante"],
-        ["bettlägerig",  "Aktuell bettlägerig"]
-      ]}
-    ]},
-
-    { knopf:"Atemtrainer", satz:"Atemtrainer wird {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"regelmäßig genutzt", optionen:[
-        ["genutzt",      "regelmäßig genutzt"],
-        ["nicht genutzt","nicht genutzt"]
-      ]}
-    ]},
-
-    { knopf:"Luftnot", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Keine Luftnot", optionen:[
-        ["keine",             "Keine Luftnot"],
-        ["bei Belastung",     "Luftnot bei Belastung"],
-        ["in Ruhe",           "Luftnot in Ruhe"],
-        ["produktiver Husten","Produktiver Husten"]
-      ]}
-    ]}
-
-  ]}
-]},
-
-
-/* ═════════════════════════════ O – OBJEKTIV ══════════════════════════════
-   Der erhobene Untersuchungsbefund.                                      */
-O:{ name:"Objektiv", gruppen:[
-
-  { gruppe:"Allgemein / Vitalwerte", bausteine:[
-
-    { knopf:"AZ stabil", satz:"Wach, allseits orientiert, kardiopulmonal stabil" },
-
-    { knopf:"Temperatur", satz:"{z}{n}", felder:[
-      { name:"n", art:"text", hinweis:"°C", freiwillig:true, davor:", ", danach:" °C" },
-      { name:"z", art:"auswahl", vorgabe:"Afebril", optionen:[
-        ["afebril",  "Afebril"],
-        ["subfebril","Subfebril"],
-        ["febril",   "Febril"]
-      ]}
-    ]},
-
-    /* Alle vier Werte sind freiwillig: man trägt nur ein, was man gemessen
-       hat. Ohne jede Eingabe erscheint dieser Baustein gar nicht im Text.  */
-    { knopf:"Vitalwerte", satz:"{rr}{hf}{sp}{z}", felder:[
-      { name:"rr", art:"text", hinweis:"120/75", freiwillig:true,
-        davor:"RR ", danach:" mmHg", mittel:true },
-      { name:"hf", art:"zahl", hinweis:"HF", freiwillig:true,
-        davor:", HF ", danach:"/min" },
-      { name:"sp", art:"zahl", hinweis:"SpO₂", freiwillig:true,
-        davor:", SpO₂ ", danach:" %" },
-      { name:"z", art:"auswahl", titel:"unter", freiwillig:true, davor:" ", optionen:[
-        ["Raumluft","unter Raumluft"],
-        ["2 l O₂",  "unter 2 l O₂/min"],
-        ["4 l O₂",  "unter 4 l O₂/min"],
-        ["6 l O₂",  "unter 6 l O₂/min"]
-      ]}
-    ]},
-
-    { knopf:"Somnolent", satz:"Somnolent, erweckbar" }
-
-  ]},
-
-  { gruppe:"Abdomen", bausteine:[
-
-    { knopf:"Abdomen", satz:"Abdomen {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"weich", optionen:[
-        ["weich",        "weich"],
-        ["adipös, weich","adipös und weich"],
-        ["gebläht",      "gebläht"],
-        ["gespannt",     "gespannt"]
-      ]}
-    ]},
-
-    { knopf:"Druckschmerz", satz:"{z}{f}{s}", felder:[
-      { name:"f", art:"text", hinweis:"Ergänzung", freiwillig:true, davor:", ", breit:true }, 
-      { name:"z", art:"auswahl", vorgabe:"Kein Druckschmerz",
-        eigeneEingabe:true, optionen:[
-        ["kein",          "Kein Druckschmerz"],
-        ["OP-Gebiet",     "Druckschmerz im OP-Gebiet"],
-        ["Oberbauch", "Druckschmerz im Oberbauch"],
-        ["Unterbauch","Druckschmerz im  Unterbauch"],
-        ["Mittelbauch",   "Druckschmerz im Mittelbauch"],
-        ["epigastrisch",  "Druckschmerz epigastrisch"],
-        ["diffus",        "Druckschmerz über dem gesamten Abdomen"]
-      ]}, FELD_SEITE
-    ]},
-
-    { knopf:"Abwehrspannung", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Keine Abwehrspannung", optionen:[
-        ["kein",          "Keine Abwehrspannung"],
-        ["leicht",  "Leichte Abwehrspannung"],
-        ["stark", "Starke Abwehrspannung"]
-      ]}
-    ]},
-
-    { knopf:"Darmgeräusche", satz:"{z}", felder:[
-      { name:"z", art:"auswahl",
-        vorgabe:"Darmgeräusche über allen vier Quadranten regelrecht", optionen:[
-        ["regelrecht",   "Darmgeräusche über allen vier Quadranten regelrecht"],
-        ["reduziert",   "Darmgeräusche über allen vier Quadranten vorhanden, jedoch reduziert"],
-        ["spärlich",     "Spärliche Darmgeräusche"],
-        ["keine",        "Keine Darmgeräusche auskultierbar"],
-        ["hochgestellt", "Hochgestellte Darmgeräusche"]
-      ]}
-    ]},
-
-    { knopf:"Bruchpforten frei", satz:"Bruchpforten frei" },
-
-    { knopf:"Beide Hoden im Skrotum", satz:"Beide Hoden regelrecht im Skrotum tastbar" },
-
-    { knopf:"Hämatome", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Kein Hämatom",
-        eigeneEingabe:true, optionen:[
-        ["kein",       "Kein Hämatom"],
-        ["Leiste ",   "Leistenhämtom"],
-        ["Periumbilikal",   "Periumbilikalhämatom"],
-        ["Supraumbilikal",  "Supraumbilikalhämatom"],
-        ["Infraumbilikal", "Infraumbilikalhämatom"],
-        ["Skrotal",    "Skrotalhämatom"]
-      ]}
-      ]},
-
-    { knopf:"Rektal digital", satz:"Digital-rektale Untersuchung {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"ohne pathologischen Befund",
-        eigeneEingabe:true, optionen:[
-        ["o.p.B.",       "ohne pathologischen Befund"],
-        ["leere Ampulle","mit leerer Ampulle"],
-        ["Stuhl",        "mit Stuhl in der Ampulle"],
-        ["Blut",         "mit Blut am Fingerling"],
-        ["Druckschmerz", "mit Druckschmerz"],
-        ["Resistenz",    "mit tastbarer Resistenz"]
-      ]}
-    ]}
-
-  ]},
-
-  { gruppe:"Wunde / Verband", bausteine:[
-
-    { knopf:"Wunde", satz:"{z}{n}{q}", felder:[
-      { name:"n", art:"zahl", hinweis:"cm",
-        freiwillig:true, davor:" auf ", danach:" cm Länge" },
-      { name:"z", art:"auswahl", vorgabe:"Wundverhältnisse reizlos", optionen:[
-        ["reizlos",  "Wundverhältnisse reizlos"],
-        ["Rötung",   "Diskrete Rötung der Wundränder"],
-        ["Infekt",   "Gerötete, überwärmte Wunde mit putrider Sekretion"],
-        ["Dehiszenz","Wunddehiszenz"],
-        ["Serom",    "Tastbares Serom im Wundbereich"],
-        ["Hämatom",  "Hämatom im Wundbereich"]
-      ]},
-      { name:"q", art:"auswahl", titel:"sezerniert", freiwillig:true,
-        davor:", Sekretion ", optionen:SEKRET }
-    ]},
-
-    { knopf:"Verband", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Verband trocken und sauber", optionen:[
-        ["trocken",      "Verband trocken und sauber"],
-        ["altblutig",    "Pflaster altblutig durchgeschlagen"],
-        ["frisch blutig","Pflaster frisch blutig durchgeschlagen"],
-        ["serös",        "Pflaster serös durchgeschlagen"],
-        ["blutig-serös",        "Pflaster blutig-serös durchgeschlagen"]
-      ]}
-    ]},
-
-    { knopf:"Klammern / Nähte in situ", satz:"Klammern bzw. Hautnähte reizlos in situ" },
-
-    { knopf:"VAC", satz:"{z}{n}{l}", felder:[
-      { name:"n", art:"zahl", hinweis:"mmHg", vorgabe:"125",
-        freiwillig:true, davor:", Sog ", danach:" mmHg" },
-      { name:"z", art:"auswahl", vorgabe:"VAC-Verband intakt", optionen:[
-        ["VAC intakt",     "VAC-Verband intakt"],
-        ["Spül-VAC intakt","Spül-VAC intakt"],
-        ["Granulation",    "Wundgrund gut granuliert unter der VAC-Therapie"]
-      ]},
-      { name:"l", art:"auswahl", titel:"Instillation", freiwillig:true,
-        davor:", Instillation mit ",
-        optionen:["NaCl 0,9 %","Lavasept","Prontosan","Octenilin"] }
-    ]}
-
-  ]},
-
-  { gruppe:"Drainagen / Ableitungen", bausteine:[
-
-    /* Mehrfach: mehrere Drainagen einzeln beschreiben.
-       Ergibt z.B. "Blake-Drainage rechts fördert 40 ml/24 h, serös".      */
-    { knopf:"Drainage", mehrfach:true, satz:"{d}{s} {z}{n}{q}", felder:[
-      { name:"n", art:"zahl", hinweis:"ml", freiwillig:true, davor:" ", danach:" ml/24 h" },
-      { name:"d", art:"auswahl", titel:"Art", vorgabe:"Drainage",
-        eigeneEingabe:true, optionen:DRAIN },
-      FELD_SEITE,
-      { name:"z", art:"auswahl", titel:"Status", vorgabe:"fördert", optionen:[
-        ["fördert",     "fördert"],
-        ["fördert nicht","fördert kein Sekret mehr"],
-        ["vermehrt",    "fördert vermehrt"]
-      ]},
-      { name:"q", art:"auswahl", titel:"Sekret", freiwillig:true, davor:", ",
-        optionen:SEKRET }
-    ]},
-
-    { knopf:"Urinausscheidung", satz:"{z}{n}", felder:[
-      { name:"n", art:"zahl", hinweis:"ml", freiwillig:true, davor:", ", danach:" ml/24 h" },
-      { name:"z", art:"auswahl", vorgabe:"Urinausscheidung ausreichend", optionen:[
-        ["ausreichend","Urinausscheidung ausreichend"],
-        ["vermindert", "Urinausscheidung vermindert"],
-        ["Oligurie",   "Oligurie"],
-        ["Anurie",     "Anurie"]
-      ]}
-    ]},
-
-    { knopf:"Bilanz", satz:"Bilanz {z}{n}", felder:[
-      { name:"n", art:"text", hinweis:"+500", freiwillig:true, davor:", ", danach:" ml" },
-      { name:"z", art:"auswahl", vorgabe:"ausgeglichen",
-        optionen:["ausgeglichen","positiv","negativ"] }
-    ]},
-
-    { knopf:"Stoma reizlos", satz:"Stoma gut durchblutet, fördert regelrecht" }
-
-  ]},
-
-  { gruppe:"Herz / Lunge / Extremitäten / Labor", bausteine:[
-
-    { knopf:"Herztöne rein", satz:"Herztöne rein und rhythmisch" },
-
-    { knopf:"Lunge", satz:"{z}{s}", felder:[
-      { name:"z", art:"auswahl",
-        vorgabe:"Vesikuläres Atemgeräusch beidseits, keine Nebengeräusche", optionen:[
-        ["vesikulär bds.",    "Vesikuläres Atemgeräusch beidseits, keine Nebengeräusche"],
-        ["basal abgeschwächt","Basal abgeschwächtes Atemgeräusch"],
-        ["Rasselgeräusche",   "Feuchte Rasselgeräusche"]
-      ]},
-      FELD_SEITE
-    ]},
-
-    { knopf:"Beinödeme", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Keine Beinödeme", optionen:[
-        ["keine",     "Keine Beinödeme"],
-        ["beidseits", "Beinödeme beidseits"],
-        ["rechts",    "Beinödeme rechts"],
-        ["links",     "Beinödeme links"],
-        ["prätibial", "Prätibiale Ödeme beidseits"]
-      ]}
-    ]},
-
-    { knopf:"Keine TVT-Zeichen",
-      satz:"Keine klinischen Zeichen einer tiefen Beinvenenthrombose" },
-
-    { knopf:"pDMS intakt",
-      satz:"Periphere Durchblutung, Motorik und Sensibilität intakt" },
-
-    { knopf:"Labor", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Laborchemisch unauffälliger Verlauf",
-        eigeneEingabe:true, optionen:[
-        ["unauffällig",            "Laborchemisch unauffälliger Verlauf"],
-        ["Infektwerte rückläufig", "Entzündungsparameter rückläufig"],
-        ["Infektwerte steigend",   "Entzündungsparameter ansteigend"],
-        ["Hb-Abfall",              "Hb-Abfall"],
-        ["Anämie",                 "Laborchemisch Anämie"]
-      ]}
-    ]}
-
-  ]}
-]},
-
-
-/* ════════════════════════════ A – ASSESSMENT ═════════════════════════════
-   Die Beurteilung der Situation.                                          */
-A:{ name:"Assessment", gruppen:[
-
-  { gruppe:"Verlauf", bausteine:[
-
-    { knopf:"Verlauf", satz:"{z}{n}", felder:[
-      { name:"n", art:"zahl", hinweis:"POD",
-        freiwillig:true, davor:", ", danach:". postoperativer Tag" },
-      { name:"z", art:"auswahl", vorgabe:"Regelrechter postoperativer Verlauf", optionen:[
-        ["regelrecht postop.",   "Regelrechter postoperativer Verlauf"],
-        ["protrahiert",          "Protrahierter postoperativer Verlauf"],
-        ["regelrecht konservativ","Regelrechter Verlauf unter konservativer Therapie"],
-        ["stabil",               "Klinisch und laborchemisch stabile Situation"],
-        ["Verschlechterung",     "Klinische Befundverschlechterung"],
-        ["auf Behandlungspfad",  "Verlauf entsprechend dem Behandlungspfad"],
-        ["präoperativ",          "Präoperativ"]
-      ]}
-    ]},
-
-    { knopf:"Z.n. Operation", satz:"Z.n. {z}{d}", felder:[
-      { name:"z", art:"text", hinweis:"Eingriff", breit:true },
-      { name:"d", art:"text", hinweis:"Datum", freiwillig:true, davor:" am ", mittel:true }
-    ]},
-
-    { knopf:"Tag stationär", satz:"{n}. Tag des stationären Aufenthaltes", felder:[
-      { name:"n", art:"zahl", hinweis:"Tg" }
-    ]},
-
-    { knopf:"Keine Komplikationszeichen", satz:"Kein Anhalt für postoperative Komplikationen" },
-
-    { knopf:"Wundheilung", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Primär heilende Wundverhältnisse", optionen:[
-        ["primär",        "Primär heilende Wundverhältnisse"],
-        ["sekundär",      "Sekundär heilende Wunde"],
-        ["abgeschlossen", "Wundheilung abgeschlossen"],
-        ["unter VAC",     "Wundkonditionierung unter VAC-Therapie, Wundgrund zunehmend granuliert"],
-        ["Infektsanierung","Fortschreitende Infektsanierung unter Spül-VAC-Therapie"]
-      ]}
-    ]}
-
-  ]},
-
-  { gruppe:"Probleme", bausteine:[
-
-    /* Mehrfachauswahl OHNE einzelsaetze → alles in einem "V.a."-Satz. */
-    { knopf:"Verdacht auf", satz:"V.a. {z}", felder:[
-      { name:"z", art:"mehrfachauswahl", eigeneEingabe:true, optionen:[
-        ["Wundinfekt",            "Wundinfektion"],
-        ["Wundheilungsstörung",   "Wundheilungsstörung"],
-        ["Ileus",                 "paralytischen Ileus"],
-        ["Abszess",               "intraabdominellen Abszess"],
-        ["Anastomoseninsuffizienz","Anastomoseninsuffizienz"],
-        ["Nahtinsuffizienz",      "Nahtinsuffizienz"],
-        ["Nachblutung",           "postoperative Nachblutung"],
-        ["HWI",                   "Harnwegsinfekt"],
-        ["Pneumonie",             "postoperative Pneumonie"],
-        ["Gallenleck",            "Gallenleck"],
-        ["Pankreasfistel",        "postoperative Pankreasfistel"],
-        ["Lymphfistel",           "Lymphfistel"],
-        ["Katheterinfektion",     "katheterassoziierte Infektion"],
-        ["TVT",                   "tiefe Beinvenenthrombose"]
-      ]}
-    ]},
-
-    /* Mehrfachauswahl MIT einzelsaetze → jede Auswahl wird ein eigener Satz. */
-    { knopf:"Problem", satz:"{z}", felder:[
-      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
-        "Verzögerter Kostaufbau",
-        "Postoperative Darmatonie",
-        "Gesicherte Wundinfektion",
-        "Postoperatives Serom",
-        "Postoperatives Wundhämatom",
-        "Fasziendehiszenz",
-        "Platzbauch",
-        "Postoperative Anämie",
-        "Postoperatives Delir",
-        "Postoperative Übelkeit und Erbrechen (PONV)",
-        "Elektrolytentgleisung",
-        "Akute Nierenfunktionseinschränkung",
-        "Hypervolämie",
-        "Tachykardes Vorhofflimmern",
-        "Hypertensive Entgleisung",
-        "Malnutrition",
-        "Verzögerte Mobilisation",
-        "Unzureichende Schmerzkontrolle",
-        "Sepsis"
-      ]}
-    ]}
-
-  ]},
-
-  { gruppe:"Beurteilung / Ziel", bausteine:[
-
-    { knopf:"Antibiose", satz:"Antibiotische Therapie {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"zeigt Wirkung", optionen:[
-        ["wirksam",            "zeigt Wirkung"],
-        ["Deeskalation möglich","kann deeskaliert werden"],
-        ["ohne Ansprechen",    "zeigt bislang kein Ansprechen"]
-      ]}
-    ]},
-
-    { knopf:"Vorgehen", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Fortführung des konservativen Vorgehens", optionen:[
-        ["konservativ",  "Fortführung des konservativen Vorgehens"],
-        ["OP-Indikation","OP-Indikation gestellt"],
-        ["abwartend",    "Zunächst abwartendes Vorgehen unter engmaschiger Kontrolle"]
-      ]}
-    ]},
-
-    { knopf:"Entlassfähigkeit", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"{P} ist entlassfähig", optionen:[
-        ["entlassfähig",     "{P} ist entlassfähig"],
-        ["noch nicht",       "{P} ist aktuell noch nicht entlassfähig"],
-        ["Anschlussversorgung","Anschlussversorgung erforderlich"]
-      ]}
-    ]},
-
-    { knopf:"Drainage kann entfernt werden", satz:"Drainage kann entfernt werden" },
-
-    { knopf:"Kostaufbau steigerbar", satz:"Kostaufbau kann gesteigert werden" },
-
-    { knopf:"Interdisziplinär", satz:"Weiterbehandlung interdisziplinär{z}", felder:[
-      { name:"z", art:"text", hinweis:"Fachrichtung",
-        freiwillig:true, davor:" gemeinsam mit ", breit:true }
-    ]},
-
-    { knopf:"Palliative Situation", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Palliative Behandlungssituation", optionen:[
-        ["palliativ",          "Palliative Behandlungssituation"],
-        ["Best Supportive Care","Best-Supportive-Care-Konzept"]
-      ]}
-    ]}
-
-  ]}
-]},
-
-
-/* ════════════════════════════ P – PROCEDERE ══════════════════════════════
-   Was als Nächstes zu tun ist.                                            */
-P:{ name:"Procedere", gruppen:[
-
-  { gruppe:"Wunde / Drainagen / Zugänge", bausteine:[
-
-    { knopf:"Verbandswechsel", satz:"Verbandswechsel {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"heute", eigeneEingabe:true, optionen:[
-        ["heute","heute"], ["morgen","morgen"], ["täglich","täglich"],
-        ["jeden 2. Tag","jeden zweiten Tag"]
-      ]}
-    ]},
-
-    { knopf:"VAC-Wechsel", satz:"VAC-Wechsel {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"im OP anmelden", eigeneEingabe:true, optionen:[
-        ["im OP anmelden",   "im OP anmelden"],
-        ["heute",            "heute"],
-        ["morgen",           "morgen"],
-        ["Spül-VAC fortführen","als Spül-VAC fortführen"]
-      ]}
-    ]},
-
-    { knopf:"Wundvisite anmelden", satz:"Wundvisite anmelden" },
-
-    { knopf:"Fadenzug / Klammern", satz:"Fadenzug bzw. Klammerentfernung{n}", felder:[
-      { name:"n", art:"zahl", hinweis:"POD",
-        freiwillig:true, davor:" am ", danach:". postoperativen Tag" }
-    ]},
-
-    { knopf:"Drainage", mehrfach:true, satz:"{d}{s} {z}", felder:[
-      { name:"d", art:"auswahl", titel:"Art", vorgabe:"Drainage",
-        eigeneEingabe:true, optionen:DRAIN },
-      FELD_SEITE,
-      { name:"z", art:"auswahl", titel:"Vorgehen", vorgabe:"entfernen", optionen:[
-        ["entfernen","entfernen"],
-        ["belassen", "vorerst belassen"],
-        ["anspülen", "anspülen"]
-      ]}
-    ]},
-
-    { knopf:"Zugang / Katheter", satz:"{z}", felder:[
-      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
-        "PVK entfernen",
-        "PVK wechseln",
-        "ZVK entfernen",
-        "ZVK wechseln",
-        "Blasenkatheter entfernen, Miktionskontrolle",
-        "Magensonde entfernen",
-        "PDK entfernen"
-      ]}
-    ]}
-
-  ]},
-
-  { gruppe:"Therapie", bausteine:[
-
-    { knopf:"Kost", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Kostaufbau fortführen", optionen:[
-        ["Aufbau fortführen","Kostaufbau fortführen"],
-        ["Aufbau beginnen",  "Kostaufbau beginnen"],
-        ["Vollkost",         "Umstellung auf Vollkost"],
-        ["Nahrungskarenz",   "Weiterhin Nahrungskarenz"],
-        ["Trinken erlaubt",  "Trinken erlaubt"]
-      ]}
-    ]},
-
-    { knopf:"Analgesie", satz:"Analgesie {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"anpassen", optionen:[
-        ["anpassen",    "anpassen"],
-        ["reduzieren",  "schrittweise reduzieren"],
-        ["intensivieren","intensivieren"]
-      ]}
-    ]},
-
-    { knopf:"Antibiose", satz:"Antibiotische Therapie{m} {z}{d}", felder:[
-      { name:"m", art:"text", hinweis:"Präparat", freiwillig:true, davor:" mit ", breit:true },
-      { name:"d", art:"text", hinweis:"bis", freiwillig:true, davor:" bis ", mittel:true },
-      { name:"z", art:"auswahl", vorgabe:"fortführen", optionen:[
-        ["fortführen",      "fortführen"],
-        ["auf p.o. umstellen","auf orale Gabe umstellen"],
-        ["beenden",         "beenden"],
-        ["beginnen",        "beginnen"]
-      ]}
-    ]},
-
-    { knopf:"Weiteres", satz:"{z}", felder:[
-      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
-        "Parenterale Ernährung fortführen",
-        "Mobilisation intensivieren",
-        "Physiotherapie anmelden",
-        "Atemtherapie anmelden",
-        "Ein- und Ausfuhrbilanzierung",
-        "Thromboseprophylaxe anpassen",
-        "Abführmaßnahmen einleiten"
-      ]}
-    ]},
-
-    { knopf:"EK transfundieren", satz:"{n}Erythrozytenkonzentrat(e) transfundieren", felder:[
-      { name:"n", art:"zahl", hinweis:"Anz.", freiwillig:true, danach:" " }
-    ]}
-
-  ]},
-
-  { gruppe:"Diagnostik", bausteine:[
-
-    { knopf:"Laborkontrolle", satz:"Laborkontrolle {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"morgen früh", eigeneEingabe:true, optionen:[
-        ["morgen früh","morgen früh"],
-        ["heute",      "im Verlauf heute"],
-        ["täglich",    "täglich"],
-        ["übermorgen", "übermorgen"]
-      ]}
-    ]},
-
-    { knopf:"Sonographie", satz:"Sonographie {z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"des Abdomens", eigeneEingabe:true, optionen:[
-        ["Abdomen",     "des Abdomens"],
-        ["Leiste re.",  "der Leiste rechts"],
-        ["Leiste li.",  "der Leiste links"],
-        ["Wundgebiet",  "des Wundgebietes"],
-        ["Hämatom",     "zum Hämatomausschluss"],
-        ["Serom",       "zur Seromkontrolle"],
-        ["Abszess",     "zum Abszessausschluss"],
-        ["Nieren",      "der Nieren und ableitenden Harnwege"],
-        ["Gallenwege",  "der Gallenblase und Gallenwege"],
-        ["Beinvenen",   "der Beinvenen zum TVT-Ausschluss"],
-        ["Restharn",    "zur Restharnbestimmung"]
-      ]}
-    ]},
-
-    { knopf:"CT anmelden", satz:"CT {r}{k} anmelden", felder:[
-      { name:"r", art:"auswahl", titel:"Region", vorgabe:"Abdomen", eigeneEingabe:true,
-        optionen:["Abdomen","Abdomen und Becken","Thorax","Thorax und Abdomen","Hals","Schädel"] },
-      { name:"k", art:"auswahl", titel:"Kontrast", freiwillig:true, davor:" ",
-        optionen:["nativ","mit Kontrastmittel","mit KM i.v. und oral",
-                  "in venöser Phase","in arterieller Phase"] }
-    ]},
-
-    { knopf:"Weitere Diagnostik", satz:"{z}", felder:[
-      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
-        "Röntgen-Thorax anmelden",
-        "Wundabstrich zur mikrobiologischen Diagnostik",
-        "Blutkulturen abnehmen",
-        "Urinkultur abnehmen",
-        "EKG schreiben",
-        "Histologischen Befund abwarten",
-        "Röntgen-Abdomen anmelden"
-      ]}
-    ]}
-
-  ]},
-
-  { gruppe:"Organisation / Entlassung", bausteine:[
-
-    { knopf:"Rücksprache", satz:"{z}", felder:[
-      { name:"z", art:"auswahl", vorgabe:"Rücksprache mit dem Oberarzt/der Oberärztin",
-        eigeneEingabe:true, optionen:[
-        ["Oberarzt",      "Rücksprache mit dem Oberarzt/der Oberärztin"],
-        ["Kurvenvisite",  "Entscheidung im Rahmen der Kurvenvisite"],
-        ["Tumorkonferenz","Vorstellung in der interdisziplinären Tumorkonferenz"]
-      ]}
-    ]},
-
-    { knopf:"Konsil anmelden", satz:"Konsil{z} anmelden", felder:[
-      { name:"z", art:"text", hinweis:"Fachrichtung", freiwillig:true, davor:" ", breit:true }
-    ]},
-
-    { knopf:"Organisation", satz:"{z}", felder:[
-      { name:"z", art:"mehrfachauswahl", einzelsaetze:true, eigeneEingabe:true, optionen:[
-        "Sozialdienst einschalten",
-        "Anschlussheilbehandlung beantragen",
-        "Häusliche Versorgung klären",
-        "Ambulanten Pflegedienst organisieren",
-        "Ambulante Wundbehandlung organisieren",
-        "Gespräch mit den Angehörigen",
-        "Entlassungsbrief und Rezepte vorbereiten"
-      ]}
-    ]},
-
-    { knopf:"Entlassung", satz:"Entlassung {z}{d}", felder:[
-      { name:"d", art:"text", hinweis:"Datum", freiwillig:true, davor:" ", mittel:true },
-      { name:"z", art:"auswahl", vorgabe:"bahnen", optionen:[
-        ["bahnen","bahnen"], ["heute","heute"], ["morgen","morgen"],
-        ["geplant für","geplant für"]
-      ]}
-    ]},
-
-    { knopf:"Wiedervorstellung", satz:"{z}{n}", felder:[
-      { name:"n", art:"zahl", hinweis:"Wo", freiwillig:true, davor:" in ", danach:" Wochen" },
-      { name:"z", art:"auswahl", vorgabe:"Wiedervorstellung in der chirurgischen Ambulanz",
-        eigeneEingabe:true, optionen:[
-        ["chir. Ambulanz",  "Wiedervorstellung in der chirurgischen Ambulanz"],
-        ["Hausarzt",        "Vorstellung beim Hausarzt zur Wundkontrolle"],
-        ["Wundsprechstunde","Vorstellung in der Wundsprechstunde"]
-      ]}
-    ]},
-
-    { knopf:"Verlegung", satz:"Verlegung{z} veranlassen", felder:[
-      { name:"z", art:"text", hinweis:"Station", freiwillig:true, davor:" auf ", breit:true }
-    ]}
-
-  ]}
-]},
-
-
-/* ═══════════════════════ FM – EINLIEGENDES FREMDMATERIAL ═════════════════
-   Erscheint als eigener Abschnitt am Ende der Dokumentation.
-   Alle Materialien sind "mehrfach" – man kann also z.B. drei PVK getrennt
-   erfassen. Aufbau immer gleich:
-       Material (Lokalisation) für Indikation, Indikation, Planung
-   Beispiel:
-       PVK (Unterarm li.) für Antibiose, wird heute entfernt
-   Das Planungsfeld steckt in FELD_PLAN weiter oben – dort ergänzt, wirkt
-   eine Änderung bei allen Materialien gleichzeitig.                       */
-M:{ name:"Fremdmaterial", gruppen:[
-
-  /* gruppe:"" bedeutet: ohne Zwischenüberschrift anzeigen.
-     "alleinstehend" schaltet beim Anklicken alle anderen Bausteine dieses
-     Reiters ab – und wird selbst abgeschaltet, sobald ein Material gewählt
-     wird. Statt der Aufzählung erscheint dann nur dieser eine Satz.        */
-  { gruppe:"", bausteine:[
-    { knopf:"Kein Fremdmaterial", alleinstehend:true,
-      satz:"Kein einliegendes Fremdmaterial" }
-  ]},
-
-  { gruppe:"Gefäßzugänge", bausteine:[
-
-    { knopf:"PVK", mehrfach:true, satz:"PVK{loc}{ind}{plan}", felder:[
-      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true, optionen:[
-        "Handrücken re.","Handrücken li.","Unterarm re.","Unterarm li.",
-        "Ellenbeuge re.","Ellenbeuge li.","Oberarm re.","Oberarm li.",
-        "Fußrücken re.","Fußrücken li." ]},
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true, optionen:[
-        "Antibiose","Schmerztherapie","Volumentherapie","Medikamentengabe",
-        "Kontrastmittelgabe" ]},
-      FELD_PLAN
-    ]},
-
-    { knopf:"ZVK", mehrfach:true, satz:"ZVK{loc}{ind}{plan}", felder:[
-      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true, optionen:[
-        "V. jugularis int. re.","V. jugularis int. li.","V. subclavia re.",
-        "V. subclavia li.","V. femoralis re.","V. femoralis li." ]},
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true, optionen:[
-        "Antibiose","Parenterale Ernährung","Volumentherapie","Medikamentengabe",
-        "Blutentnahme" ]},
-      FELD_PLAN
-    ]},
-
-    { knopf:"Port", mehrfach:true, satz:"Portkatheter{loc}{ind}{plan}", felder:[
-      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true,
-        optionen:["Thorax re.","Thorax li.","Oberarm re.","Oberarm li."] },
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true,
-        optionen:["Chemotherapie","Antibiose","Parenterale Ernährung","Blutentnahme"] },
-      FELD_PLAN
-    ]},
-
-    { knopf:"Midline / PICC", mehrfach:true, satz:"Midline-Katheter{loc}{ind}{plan}", felder:[
-      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true,
-        optionen:["Oberarm re.","Oberarm li."] },
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true,
-        optionen:["Antibiose","Parenterale Ernährung","Medikamentengabe","Blutentnahme"] },
-      FELD_PLAN
-    ]}
-
-  ]},
-
-  { gruppe:"Drainagen", bausteine:[
-
-    { knopf:"Drainage", mehrfach:true, satz:"{art}{loc}{ind}{plan}", felder:[
-      { name:"art", art:"auswahl", titel:"Art", vorgabe:"Drainage",
-        eigeneEingabe:true, optionen:[
-        "Drainage","Redon-Drainage","Blake-Drainage","Easy-Flow-Drainage",
-        "Robinson-Drainage","Zieldrainage","Lasche","Thoraxdrainage","T-Drainage" ]},
-      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true, optionen:[
-        "Oberbauch re.","Oberbauch li.","Unterbauch re.","Unterbauch li.","Mittelbauch",
-        "subhepatisch","subphrenisch re.","subphrenisch li.","Milzloge","Douglas-Raum",
-        "Wundgebiet","Leiste re.","Leiste li.","Axilla re.","Axilla li.",
-        "Bülau re.","Bülau li.","Ductus choledochus" ]},
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true, optionen:[
-        "Ableitung von Wundsekret","Sekretkontrolle","Blutungskontrolle",
-        "Insuffizienzkontrolle","Abszessdrainage","Galleableitung","Luftableitung",
-        "Pleuraerguss" ]},
-      FELD_PLAN
-    ]},
-
-    { knopf:"VAC / Spül-VAC", mehrfach:true, satz:"{art}{loc}{ind}{plan}", felder:[
-      { name:"art", art:"auswahl", titel:"Art", vorgabe:"VAC-System",
-        optionen:["VAC-System","Spül-VAC","Endo-SPONGE"] },
-      { name:"loc", art:"auswahl", titel:"Lokalisation", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true, optionen:[
-        "Wundgebiet","Oberbauch","Unterbauch","Laparostoma","Rektum","Anastomose",
-        "präsakral","Leiste re.","Leiste li." ]},
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true, optionen:[
-        "Wundkonditionierung","Ableitung von Wundsekret","Infektsanierung",
-        "Instillationstherapie","Anastomoseninsuffizienz","Vorbereitung Sekundärverschluss" ]},
-      FELD_PLAN
-    ]}
-
-  ]},
-
-  { gruppe:"Sonden / Katheter", bausteine:[
-
-    { knopf:"Blasenkatheter", mehrfach:true, satz:"Blasenkatheter{loc}{ind}{plan}", felder:[
-      { name:"loc", art:"auswahl", titel:"Lage", freiwillig:true,
-        davor:" (", danach:")", optionen:["transurethral","suprapubisch"] },
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true,
-        optionen:["Harnableitung","Bilanzierung","Harnverhalt"] },
-      FELD_PLAN
-    ]},
-
-    { knopf:"Magensonde / PEG", mehrfach:true, satz:"{art}{loc}{ind}{plan}", felder:[
-      { name:"art", art:"auswahl", titel:"Art", vorgabe:"Magensonde",
-        optionen:["Magensonde","PEG-Sonde"] },
-      { name:"loc", art:"auswahl", titel:"Lage", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true,
-        optionen:["nasogastral re.","nasogastral li.","oral","Oberbauch li."] },
-      { name:"ind", art:"mehrfachauswahl", titel:"Indikation", freiwillig:true,
-        davor:" für ", eigeneEingabe:true, optionen:[
-        "Magenentlastung","Ableitung von Magensekret","Enterale Ernährung",
-        "Medikamentengabe" ]},
-      FELD_PLAN
-    ]},
-
-    { knopf:"Schmerzkatheter / PDK", mehrfach:true,
-      satz:"{art}{loc} für Schmerztherapie{plan}", felder:[
-      { name:"art", art:"auswahl", titel:"Art", vorgabe:"Periduralkatheter",
-        optionen:["Periduralkatheter","Regionaler Schmerzkatheter"] },
-      { name:"loc", art:"auswahl", titel:"Lage", freiwillig:true,
-        davor:" (", danach:")", eigeneEingabe:true, optionen:[
-        "thorakal","lumbal","BWK 7/8","BWK 9/10","LWK 2/3","Wundgebiet",
-        "Leiste re.","Leiste li." ]},
-      FELD_PLAN
-    ]},
-
-    { knopf:"Ureterschiene (DJ)", mehrfach:true,
-      satz:"Ureterschiene (DJ){loc} für Harnableitung{plan}", felder:[
-      { name:"loc", art:"auswahl", titel:"Seite", freiwillig:true,
-        davor:" ", optionen:SEITE },
-      FELD_PLAN
-    ]}
-
-  ]}
-]}
-
-};  /* ← Ende der BAUSTEINE. Ab hier beginnt die Programmlogik. */
+  "S": {
+    "name": "Subjektiv",
+    "gruppen": [
+      {
+        "gruppe": "Allgemein",
+        "bausteine": [
+          {
+            "knopf": "Befinden",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "{P} gibt subjektives Wohlbefinden an",
+                "optionen": [
+                  [
+                    "wohl",
+                    "{P} gibt subjektives Wohlbefinden an"
+                  ],
+                  [
+                    "gebessert",
+                    "{P} fühl sich deutlich besser"
+                  ],
+                  [
+                    "unverändert",
+                    "Befinden unverändert zum Vortag"
+                  ],
+                  [
+                    "reduziert",
+                    "Reduziertes Allgemeinbefinden"
+                  ],
+                  [
+                    "abgeschlagen",
+                    "{P} klagt über Abgeschlagenheit und Müdigkeit"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Angetroffen",
+            "satz": "{P} wird {z} angetroffen",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "liegend im Bett",
+                "optionen": [
+                  [
+                    "liegend",
+                    "liegend im Bett"
+                  ],
+                  [
+                    "sitzend im Bett",
+                    "sitzend im Bett"
+                  ],
+                  [
+                    "sitzend am Tisch",
+                    "sitzend am Tisch"
+                  ],
+                  [
+                    "stehend",
+                    "stehend"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Nachtruhe",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Nachtruhe erholsam",
+                "optionen": [
+                  [
+                    "erholsam",
+                    "Nachtruhe erholsam"
+                  ],
+                  [
+                    "unruhig",
+                    "Unruhige Nacht"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Schmerzen",
+        "bausteine": [
+          {
+            "knopf": "Schmerzfrei",
+            "nurEines": "schmerz",
+            "satz": "Schmerzfrei"
+          },
+          {
+            "knopf": "Schmerzen",
+            "nurEines": "schmerz",
+            "mehrfach": true,
+            "satz": "{i}{ort}{s}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "NRS",
+                "freiwillig": true,
+                "davor": ", NRS ",
+                "danach": "/10"
+              },
+              {
+                "name": "ort",
+                "art": "auswahl",
+                "titel": "Ort",
+                "vorgabe": "Wundschmerzen",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "Wunde",
+                    "Wundschmerzen"
+                  ],
+                  [
+                    "OP-Gebiet",
+                    "Schmerzen im OP-Gebiet"
+                  ],
+                  [
+                    "Bauch",
+                    "Bauchschmerzen"
+                  ],
+                  [
+                    "Rücken",
+                    "Rückenschmerzen"
+                  ],
+                  [
+                    "Schulter",
+                    "Schulterschmerzen"
+                  ],
+                  [
+                    "Steiß",
+                    "Steißchmerzen"
+                  ],
+                  [
+                    "Thorax",
+                    "Thoraxschmerzen"
+                  ],
+                  [
+                    "Bein",
+                    "Beinschmerzen"
+                  ],
+                  [
+                    "Kopf",
+                    "Kopfschmerzen"
+                  ]
+                ]
+              },
+              {
+                "name": "s",
+                "art": "auswahl",
+                "titel": "Seite",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  "rechts",
+                  "links",
+                  "beidseits"
+                ]
+              },
+              {
+                "name": "i",
+                "art": "auswahl",
+                "titel": "Stärke",
+                "freiwillig": true,
+                "danach": " ",
+                "optionen": [
+                  "Leichte",
+                  "Mäßige",
+                  "Starke",
+                  "Zunehmende",
+                  "Rückläufige"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Analgesie",
+            "satz": "Schmerzen unter aktueller Analgesie {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "gut kontrolliert",
+                "optionen": [
+                  [
+                    "ausreichend",
+                    "gut kontrolliert"
+                  ],
+                  [
+                    "nicht ausreichend",
+                    "nicht ausreichend kontrolliert"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Bedarfsanalgesie",
+            "satz": "Bedarfsanalgesie{n} benötigt",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "x",
+                "freiwillig": true,
+                "davor": " ",
+                "danach": "x in den letzten 24 h"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Verdauung",
+        "bausteine": [
+          {
+            "knopf": "Stuhlgang",
+            "nurEines": "stuhl",
+            "satz": "{z}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "Tg",
+                "freiwillig": true,
+                "davor": " seit ",
+                "danach": " Tagen"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Stuhlgang regelrecht",
+                "optionen": [
+                  [
+                    "regelrecht",
+                    "Stuhlgang regelrecht"
+                  ],
+                  [
+                    "kein Stuhlgang",
+                    "Kein Stuhlgang"
+                  ],
+                  [
+                    "Diarrhoe",
+                    "Diarrhoe"
+                  ],
+                  [
+                    "Obstipation",
+                    "Obstipation"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Stoma",
+            "nurEines": "stuhl",
+            "satz": "Stoma {z}{n}{q}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "ml",
+                "freiwillig": true,
+                "davor": ", ",
+                "danach": " ml/24 h"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "fördert regelrecht",
+                "optionen": [
+                  [
+                    "regelrecht",
+                    "fördert regelrecht"
+                  ],
+                  [
+                    "vermehrt",
+                    "fördert vermehrt"
+                  ],
+                  [
+                    "nicht",
+                    "fördert bisher nicht"
+                  ]
+                ]
+              },
+              {
+                "name": "q",
+                "art": "auswahl",
+                "titel": "Konsistenz",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  "geformt",
+                  "breiig",
+                  "dünnflüssig",
+                  "flüssig",
+                  "wässrig",
+                  "blutig"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Windabgang",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Windabgang vorhanden",
+                "optionen": [
+                  [
+                    "vorhanden",
+                    "Windabgang vorhanden"
+                  ],
+                  [
+                    "kein",
+                    "Bisher kein Windabgang"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Übelkeit / Erbrechen",
+            "satz": "{z}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "x",
+                "freiwillig": true,
+                "davor": ", ",
+                "danach": "x in 24 h"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Keine Übelkeit, kein Erbrechen",
+                "optionen": [
+                  [
+                    "keine",
+                    "Keine Übelkeit, kein Erbrechen"
+                  ],
+                  [
+                    "Übelkeit",
+                    "Übelkeit"
+                  ],
+                  [
+                    "Erbrechen",
+                    "Erbrechen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Kost",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Kost wird gut vertragen",
+                "optionen": [
+                  [
+                    "wird vertragen",
+                    "Kost wird gut vertragen"
+                  ],
+                  [
+                    "Aufbau problemlos",
+                    "Kostaufbau verläuft problemlos"
+                  ],
+                  [
+                    "Aufbau langsam",
+                    "Kostaufbau langsam möglich"
+                  ],
+                  [
+                    "nicht vertragen",
+                    "Kost wird nicht vertragen"
+                  ],
+                  [
+                    "Appetit reduziert",
+                    "Appetit reduziert"
+                  ],
+                  [
+                    "nüchtern",
+                    "Aktuell nüchtern"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Miktion / Mobilisation / Atmung",
+        "bausteine": [
+          {
+            "knopf": "Miktion",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Miktion spontan und regelrecht",
+                "optionen": [
+                  [
+                    "regelrecht",
+                    "Miktion spontan und regelrecht"
+                  ],
+                  [
+                    "Beschwerden",
+                    "Miktionsbeschwerden"
+                  ],
+                  [
+                    "über DK",
+                    "Harnableitung über Blasenkatheter"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Mobilisation",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Selbstständig auf Station mobil",
+                "optionen": [
+                  [
+                    "selbstständig",
+                    "Selbstständig auf Station mobil"
+                  ],
+                  [
+                    "mit Hilfe",
+                    "Mobilisation auf Station mit Unterstützung"
+                  ],
+                  [
+                    "Bettkante",
+                    "Mobilisation bis an die Bettkante"
+                  ],
+                  [
+                    "bettlägerig",
+                    "Aktuell bettlägerig"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Atemtrainer",
+            "satz": "Atemtrainer wird {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "regelmäßig genutzt",
+                "optionen": [
+                  [
+                    "genutzt",
+                    "regelmäßig genutzt"
+                  ],
+                  [
+                    "nicht genutzt",
+                    "nicht genutzt"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Luftnot",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Keine Luftnot",
+                "optionen": [
+                  [
+                    "keine",
+                    "Keine Luftnot"
+                  ],
+                  [
+                    "bei Belastung",
+                    "Luftnot bei Belastung"
+                  ],
+                  [
+                    "in Ruhe",
+                    "Luftnot in Ruhe"
+                  ],
+                  [
+                    "produktiver Husten",
+                    "Produktiver Husten"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "O": {
+    "name": "Objektiv",
+    "gruppen": [
+      {
+        "gruppe": "Allgemein / Vitalwerte",
+        "bausteine": [
+          {
+            "knopf": "AZ stabil",
+            "satz": "Wach, allseits orientiert, kardiopulmonal stabil"
+          },
+          {
+            "knopf": "Temperatur",
+            "satz": "{z}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "text",
+                "hinweis": "°C",
+                "freiwillig": true,
+                "davor": ", ",
+                "danach": " °C"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Afebril",
+                "optionen": [
+                  [
+                    "afebril",
+                    "Afebril"
+                  ],
+                  [
+                    "subfebril",
+                    "Subfebril"
+                  ],
+                  [
+                    "febril",
+                    "Febril"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Vitalwerte",
+            "satz": "{rr}{hf}{sp}{z}",
+            "felder": [
+              {
+                "name": "rr",
+                "art": "text",
+                "hinweis": "120/75",
+                "freiwillig": true,
+                "davor": "RR ",
+                "danach": " mmHg",
+                "mittel": true
+              },
+              {
+                "name": "hf",
+                "art": "zahl",
+                "hinweis": "HF",
+                "freiwillig": true,
+                "davor": ", HF ",
+                "danach": "/min"
+              },
+              {
+                "name": "sp",
+                "art": "zahl",
+                "hinweis": "SpO₂",
+                "freiwillig": true,
+                "davor": ", SpO₂ ",
+                "danach": " %"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "titel": "unter",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  [
+                    "Raumluft",
+                    "unter Raumluft"
+                  ],
+                  [
+                    "2 l O₂",
+                    "unter 2 l O₂/min"
+                  ],
+                  [
+                    "4 l O₂",
+                    "unter 4 l O₂/min"
+                  ],
+                  [
+                    "6 l O₂",
+                    "unter 6 l O₂/min"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Somnolent",
+            "satz": "Somnolent, erweckbar"
+          }
+        ]
+      },
+      {
+        "gruppe": "Abdomen",
+        "bausteine": [
+          {
+            "knopf": "Abdomen",
+            "satz": "Abdomen {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "weich",
+                "optionen": [
+                  [
+                    "weich",
+                    "weich"
+                  ],
+                  [
+                    "adipös, weich",
+                    "adipös und weich"
+                  ],
+                  [
+                    "gebläht",
+                    "gebläht"
+                  ],
+                  [
+                    "gespannt",
+                    "gespannt"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Druckschmerz",
+            "satz": "{z}{f}{s}",
+            "felder": [
+              {
+                "name": "f",
+                "art": "text",
+                "hinweis": "Ergänzung",
+                "freiwillig": true,
+                "davor": ", ",
+                "breit": true
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Kein Druckschmerz",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "kein",
+                    "Kein Druckschmerz"
+                  ],
+                  [
+                    "OP-Gebiet",
+                    "Druckschmerz im OP-Gebiet"
+                  ],
+                  [
+                    "Oberbauch",
+                    "Druckschmerz im Oberbauch"
+                  ],
+                  [
+                    "Unterbauch",
+                    "Druckschmerz im  Unterbauch"
+                  ],
+                  [
+                    "Mittelbauch",
+                    "Druckschmerz im Mittelbauch"
+                  ],
+                  [
+                    "epigastrisch",
+                    "Druckschmerz epigastrisch"
+                  ],
+                  [
+                    "diffus",
+                    "Druckschmerz über dem gesamten Abdomen"
+                  ]
+                ]
+              },
+              {
+                "name": "s",
+                "art": "auswahl",
+                "titel": "Seite",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  "rechts",
+                  "links",
+                  "beidseits"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Abwehrspannung",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Keine Abwehrspannung",
+                "optionen": [
+                  [
+                    "kein",
+                    "Keine Abwehrspannung"
+                  ],
+                  [
+                    "leicht",
+                    "Leichte Abwehrspannung"
+                  ],
+                  [
+                    "stark",
+                    "Starke Abwehrspannung"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Darmgeräusche",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Darmgeräusche über allen vier Quadranten regelrecht",
+                "optionen": [
+                  [
+                    "regelrecht",
+                    "Darmgeräusche über allen vier Quadranten regelrecht"
+                  ],
+                  [
+                    "reduziert",
+                    "Darmgeräusche über allen vier Quadranten vorhanden, jedoch reduziert"
+                  ],
+                  [
+                    "spärlich",
+                    "Spärliche Darmgeräusche"
+                  ],
+                  [
+                    "keine",
+                    "Keine Darmgeräusche auskultierbar"
+                  ],
+                  [
+                    "hochgestellt",
+                    "Hochgestellte Darmgeräusche"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Bruchpforten frei",
+            "satz": "Bruchpforten frei"
+          },
+          {
+            "knopf": "Beide Hoden im Skrotum",
+            "satz": "Beide Hoden regelrecht im Skrotum tastbar"
+          },
+          {
+            "knopf": "Hämatome",
+            "satz": "{z}",
+            "mehrfach": true,
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "eigeneEingabe": true,
+                "vorgabe": "Kein Hämatom",
+                "optionen": [
+                  [
+                    "kein",
+                    "Kein Hämatom"
+                  ],
+                  [
+                    "Leiste",
+                    "Leistenhämtom"
+                  ],
+                  [
+                    "Periumbilikal",
+                    "Periumbilikalhämatom"
+                  ],
+                  [
+                    "Supraumbilikal",
+                    "Supraumbilikalhämatom"
+                  ],
+                  [
+                    "Infraumbilikal",
+                    "Infraumbilikalhämatom"
+                  ],
+                  [
+                    "Skrotal",
+                    "Skrotalhämatom"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Rektal digital",
+            "satz": "Digital-rektale Untersuchung {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "ohne pathologischen Befund",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "o.p.B.",
+                    "ohne pathologischen Befund"
+                  ],
+                  [
+                    "leere Ampulle",
+                    "mit leerer Ampulle"
+                  ],
+                  [
+                    "Stuhl",
+                    "mit Stuhl in der Ampulle"
+                  ],
+                  [
+                    "Blut",
+                    "mit Blut am Fingerling"
+                  ],
+                  [
+                    "Druckschmerz",
+                    "mit Druckschmerz"
+                  ],
+                  [
+                    "Resistenz",
+                    "mit tastbarer Resistenz"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Wunde / Verband",
+        "bausteine": [
+          {
+            "knopf": "Wunde",
+            "satz": "{z}{n}{q}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "cm",
+                "freiwillig": true,
+                "davor": " auf ",
+                "danach": " cm Länge"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Wundverhältnisse reizlos",
+                "optionen": [
+                  [
+                    "reizlos",
+                    "Wundverhältnisse reizlos"
+                  ],
+                  [
+                    "Rötung",
+                    "Diskrete Rötung der Wundränder"
+                  ],
+                  [
+                    "Infekt",
+                    "Gerötete, überwärmte Wunde mit putrider Sekretion"
+                  ],
+                  [
+                    "Dehiszenz",
+                    "Wunddehiszenz"
+                  ],
+                  [
+                    "Serom",
+                    "Tastbares Serom im Wundbereich"
+                  ],
+                  [
+                    "Hämatom",
+                    "Hämatom im Wundbereich"
+                  ]
+                ]
+              },
+              {
+                "name": "q",
+                "art": "auswahl",
+                "titel": "sezerniert",
+                "freiwillig": true,
+                "davor": ", Sekretion ",
+                "optionen": [
+                  "serös",
+                  "serös-blutig",
+                  "blutig",
+                  "altblutig",
+                  "serös umgeschlagen",
+                  "trüb",
+                  "putride"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Verband",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Verband trocken und sauber",
+                "optionen": [
+                  [
+                    "trocken",
+                    "Verband trocken und sauber"
+                  ],
+                  [
+                    "altblutig",
+                    "Pflaster altblutig durchgeschlagen"
+                  ],
+                  [
+                    "frisch blutig",
+                    "Pflaster frisch blutig durchgeschlagen"
+                  ],
+                  [
+                    "serös",
+                    "Pflaster serös durchgeschlagen"
+                  ],
+                  [
+                    "blutig-serös",
+                    "Pflaster blutig-serös durchgeschlagen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Klammern / Nähte in situ",
+            "satz": "Klammern bzw. Hautnähte reizlos in situ"
+          },
+          {
+            "knopf": "VAC",
+            "satz": "{z}{n}{l}{q}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "davor": ", Sog ",
+                "danach": " mmHg",
+                "freiwillig": true,
+                "vorgabe": "125",
+                "hinweis": "mmHg"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "VAC-Verband intakt",
+                "optionen": [
+                  [
+                    "VAC intakt",
+                    "VAC-Verband intakt"
+                  ],
+                  "Spül-VAC intakt",
+                  [
+                    "Granulation",
+                    "Wundgrund gut granuliert unter der VAC-Therapie"
+                  ]
+                ]
+              },
+              {
+                "name": "l",
+                "art": "auswahl",
+                "titel": "Instillation",
+                "davor": ", Instillation mit ",
+                "freiwillig": true,
+                "optionen": [
+                  "NaCl 0,9 %",
+                  "Lavasept",
+                  "Prontosan",
+                  "Octenilin"
+                ]
+              },
+              {
+                "name": "q",
+                "art": "zahl",
+                "davor": ", fördert ",
+                "danach": " ml/24h",
+                "freiwillig": true,
+                "hinweis": "ml"
+              }
+            ]
+          },
+          {
+            "knopf": "Magensonde",
+            "satz": "Magensonde {z}{n}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "danach": " ",
+                "vorgabe": "fördert",
+                "optionen": [
+                  "fördert",
+                  "fördert nicht"
+                ]
+              },
+              {
+                "name": "n",
+                "art": "zahl",
+                "davor": " ",
+                "danach": "ml/24h",
+                "freiwillig": true,
+                "hinweis": "ml"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Drainagen / Ableitungen",
+        "bausteine": [
+          {
+            "knopf": "Drainage",
+            "mehrfach": true,
+            "satz": "{d}{s} {z}{n}{q}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "ml",
+                "freiwillig": true,
+                "davor": " ",
+                "danach": " ml/24 h"
+              },
+              {
+                "name": "d",
+                "art": "auswahl",
+                "titel": "Art",
+                "vorgabe": "Drainage",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Drainage",
+                  "Redon-Drainage",
+                  "Blake-Drainage",
+                  "Easy-Flow-Drainage",
+                  "Robinson-Drainage",
+                  "Zieldrainage",
+                  "Lasche",
+                  "Thoraxdrainage",
+                  "Magensonde",
+                  "VAC-System",
+                  "Spül-VAC"
+                ]
+              },
+              {
+                "name": "s",
+                "art": "auswahl",
+                "titel": "Seite",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  "rechts",
+                  "links",
+                  "beidseits"
+                ]
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "titel": "Status",
+                "vorgabe": "fördert",
+                "optionen": [
+                  [
+                    "fördert",
+                    "fördert"
+                  ],
+                  [
+                    "fördert nicht",
+                    "fördert kein Sekret mehr"
+                  ],
+                  [
+                    "vermehrt",
+                    "fördert vermehrt"
+                  ]
+                ]
+              },
+              {
+                "name": "q",
+                "art": "auswahl",
+                "titel": "Sekret",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  "serös",
+                  "serös-blutig",
+                  "blutig",
+                  "altblutig",
+                  "serös umgeschlagen",
+                  "trüb",
+                  "putride"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Urinausscheidung",
+            "satz": "{z}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "ml",
+                "freiwillig": true,
+                "davor": ", ",
+                "danach": " ml/24 h"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Urinausscheidung ausreichend",
+                "optionen": [
+                  [
+                    "ausreichend",
+                    "Urinausscheidung ausreichend"
+                  ],
+                  [
+                    "vermindert",
+                    "Urinausscheidung vermindert"
+                  ],
+                  [
+                    "Oligurie",
+                    "Oligurie"
+                  ],
+                  [
+                    "Anurie",
+                    "Anurie"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Bilanz",
+            "satz": "Bilanz {z}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "text",
+                "hinweis": "+500",
+                "freiwillig": true,
+                "davor": ", ",
+                "danach": " ml"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "ausgeglichen",
+                "optionen": [
+                  "ausgeglichen",
+                  "positiv",
+                  "negativ"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Stoma reizlos",
+            "satz": "Stoma gut durchblutet, fördert regelrecht"
+          }
+        ]
+      },
+      {
+        "gruppe": "Herz / Lunge / Extremitäten / Labor",
+        "bausteine": [
+          {
+            "knopf": "Herztöne rein",
+            "satz": "Herztöne rein und rhythmisch"
+          },
+          {
+            "knopf": "Lunge",
+            "satz": "{z}{s}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Vesikuläres Atemgeräusch beidseits, keine Nebengeräusche",
+                "optionen": [
+                  [
+                    "vesikulär bds.",
+                    "Vesikuläres Atemgeräusch beidseits, keine Nebengeräusche"
+                  ],
+                  [
+                    "basal abgeschwächt",
+                    "Basal abgeschwächtes Atemgeräusch"
+                  ],
+                  [
+                    "Rasselgeräusche",
+                    "Feuchte Rasselgeräusche"
+                  ]
+                ]
+              },
+              {
+                "name": "s",
+                "art": "auswahl",
+                "titel": "Seite",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  "rechts",
+                  "links",
+                  "beidseits"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Beinödeme",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Keine Beinödeme",
+                "optionen": [
+                  [
+                    "keine",
+                    "Keine Beinödeme"
+                  ],
+                  [
+                    "beidseits",
+                    "Beinödeme beidseits"
+                  ],
+                  [
+                    "rechts",
+                    "Beinödeme rechts"
+                  ],
+                  [
+                    "links",
+                    "Beinödeme links"
+                  ],
+                  [
+                    "prätibial",
+                    "Prätibiale Ödeme beidseits"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Keine TVT-Zeichen",
+            "satz": "Keine klinischen Zeichen einer tiefen Beinvenenthrombose"
+          },
+          {
+            "knopf": "pDMS intakt",
+            "satz": "Periphere Durchblutung, Motorik und Sensibilität intakt"
+          },
+          {
+            "knopf": "Labor",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Laborchemisch unauffälliger Verlauf",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "unauffällig",
+                    "Laborchemisch unauffälliger Verlauf"
+                  ],
+                  [
+                    "Infektwerte rückläufig",
+                    "Entzündungsparameter rückläufig"
+                  ],
+                  [
+                    "Infektwerte steigend",
+                    "Entzündungsparameter ansteigend"
+                  ],
+                  [
+                    "Hb-Abfall",
+                    "Hb-Abfall"
+                  ],
+                  [
+                    "Anämie",
+                    "Laborchemisch Anämie"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "A": {
+    "name": "Assessment",
+    "gruppen": [
+      {
+        "gruppe": "Verlauf",
+        "bausteine": [
+          {
+            "knopf": "Verlauf",
+            "satz": "{z}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "POD",
+                "freiwillig": true,
+                "davor": ", ",
+                "danach": ". postoperativer Tag"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Regelrechter postoperativer Verlauf",
+                "optionen": [
+                  [
+                    "regelrecht postop.",
+                    "Regelrechter postoperativer Verlauf"
+                  ],
+                  [
+                    "protrahiert",
+                    "Protrahierter postoperativer Verlauf"
+                  ],
+                  [
+                    "regelrecht konservativ",
+                    "Regelrechter Verlauf unter konservativer Therapie"
+                  ],
+                  [
+                    "stabil",
+                    "Klinisch und laborchemisch stabile Situation"
+                  ],
+                  [
+                    "Verschlechterung",
+                    "Klinische Befundverschlechterung"
+                  ],
+                  [
+                    "auf Behandlungspfad",
+                    "Verlauf entsprechend dem Behandlungspfad"
+                  ],
+                  [
+                    "präoperativ",
+                    "Präoperativ"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Z.n. Operation",
+            "satz": "Z.n. {z}{d}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "text",
+                "hinweis": "Eingriff",
+                "breit": true
+              },
+              {
+                "name": "d",
+                "art": "text",
+                "hinweis": "Datum",
+                "freiwillig": true,
+                "davor": " am ",
+                "mittel": true
+              }
+            ]
+          },
+          {
+            "knopf": "Tag stationär",
+            "satz": "{n}. Tag des stationären Aufenthaltes",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "Tg"
+              }
+            ]
+          },
+          {
+            "knopf": "Keine Komplikationszeichen",
+            "satz": "Kein Anhalt für postoperative Komplikationen"
+          },
+          {
+            "knopf": "Wundheilung",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Primär heilende Wundverhältnisse",
+                "optionen": [
+                  [
+                    "primär",
+                    "Primär heilende Wundverhältnisse"
+                  ],
+                  [
+                    "sekundär",
+                    "Sekundär heilende Wunde"
+                  ],
+                  [
+                    "abgeschlossen",
+                    "Wundheilung abgeschlossen"
+                  ],
+                  [
+                    "unter VAC",
+                    "Wundkonditionierung unter VAC-Therapie, Wundgrund zunehmend granuliert"
+                  ],
+                  [
+                    "Infektsanierung",
+                    "Fortschreitende Infektsanierung unter Spül-VAC-Therapie"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Keine neuen Aspekte",
+            "satz": "Keine neuen Aspekte"
+          }
+        ]
+      },
+      {
+        "gruppe": "Probleme",
+        "bausteine": [
+          {
+            "knopf": "Verdacht auf",
+            "satz": "V.a. {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "mehrfachauswahl",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "Wundinfekt",
+                    "Wundinfektion"
+                  ],
+                  [
+                    "Wundheilungsstörung",
+                    "Wundheilungsstörung"
+                  ],
+                  [
+                    "Ileus",
+                    "paralytischen Ileus"
+                  ],
+                  [
+                    "Abszess",
+                    "intraabdominellen Abszess"
+                  ],
+                  [
+                    "Anastomoseninsuffizienz",
+                    "Anastomoseninsuffizienz"
+                  ],
+                  [
+                    "Nahtinsuffizienz",
+                    "Nahtinsuffizienz"
+                  ],
+                  [
+                    "Nachblutung",
+                    "postoperative Nachblutung"
+                  ],
+                  [
+                    "HWI",
+                    "Harnwegsinfekt"
+                  ],
+                  [
+                    "Pneumonie",
+                    "postoperative Pneumonie"
+                  ],
+                  [
+                    "Gallenleck",
+                    "Gallenleck"
+                  ],
+                  [
+                    "Pankreasfistel",
+                    "postoperative Pankreasfistel"
+                  ],
+                  [
+                    "Lymphfistel",
+                    "Lymphfistel"
+                  ],
+                  [
+                    "Katheterinfektion",
+                    "katheterassoziierte Infektion"
+                  ],
+                  [
+                    "TVT",
+                    "tiefe Beinvenenthrombose"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Problem",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "mehrfachauswahl",
+                "einzelsaetze": true,
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Verzögerter Kostaufbau",
+                  "Postoperative Darmatonie",
+                  "Gesicherte Wundinfektion",
+                  "Postoperatives Serom",
+                  "Postoperatives Wundhämatom",
+                  "Fasziendehiszenz",
+                  "Platzbauch",
+                  "Postoperative Anämie",
+                  "Postoperatives Delir",
+                  "Postoperative Übelkeit und Erbrechen (PONV)",
+                  "Elektrolytentgleisung",
+                  "Akute Nierenfunktionseinschränkung",
+                  "Hypervolämie",
+                  "Tachykardes Vorhofflimmern",
+                  "Hypertensive Entgleisung",
+                  "Malnutrition",
+                  "Verzögerte Mobilisation",
+                  "Unzureichende Schmerzkontrolle",
+                  "Sepsis"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Beurteilung / Ziel",
+        "bausteine": [
+          {
+            "knopf": "Antibiose",
+            "satz": "Antibiotische Therapie {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "zeigt Wirkung",
+                "optionen": [
+                  [
+                    "wirksam",
+                    "zeigt Wirkung"
+                  ],
+                  [
+                    "Deeskalation möglich",
+                    "kann deeskaliert werden"
+                  ],
+                  [
+                    "ohne Ansprechen",
+                    "zeigt bislang kein Ansprechen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Vorgehen",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Konservatives Vorgehen",
+                "optionen": [
+                  [
+                    "konservativ",
+                    "Konservatives Vorgehen"
+                  ],
+                  "OP planen",
+                  [
+                    "abwartend",
+                    "Abwartendes Vorgehen unter engmaschiger Kontrolle"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Entlassfähigkeit",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "{P} ist entlassfähig",
+                "optionen": [
+                  [
+                    "entlassfähig",
+                    "{P} ist entlassfähig"
+                  ],
+                  [
+                    "noch nicht",
+                    "{P} ist aktuell noch nicht entlassfähig"
+                  ],
+                  [
+                    "Anschlussversorgung",
+                    "Anschlussversorgung erforderlich"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Interdisziplinär",
+            "satz": "Weiterbehandlung interdisziplinär{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "text",
+                "hinweis": "Fachrichtung",
+                "freiwillig": true,
+                "davor": " gemeinsam mit ",
+                "breit": true
+              }
+            ]
+          },
+          {
+            "knopf": "Palliative Situation",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Palliative Behandlungssituation",
+                "optionen": [
+                  [
+                    "palliativ",
+                    "Palliative Behandlungssituation"
+                  ],
+                  [
+                    "Best Supportive Care",
+                    "Best-Supportive-Care-Konzept"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "P": {
+    "name": "Procedere",
+    "gruppen": [
+      {
+        "gruppe": "Wunde / Drainagen / Zugänge",
+        "bausteine": [
+          {
+            "knopf": "Verbandswechsel",
+            "satz": "Verbandswechsel {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "heute",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "heute",
+                    "heute"
+                  ],
+                  [
+                    "morgen",
+                    "morgen"
+                  ],
+                  [
+                    "täglich",
+                    "täglich"
+                  ],
+                  [
+                    "jeden 2. Tag",
+                    "jeden zweiten Tag"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "VAC-Wechsel",
+            "satz": "VAC-Wechsel {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "im OP anmelden",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "im OP anmelden",
+                    "im OP anmelden"
+                  ],
+                  [
+                    "heute",
+                    "heute"
+                  ],
+                  [
+                    "morgen",
+                    "morgen"
+                  ],
+                  [
+                    "Spül-VAC fortführen",
+                    "als Spül-VAC fortführen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Wundvisite anmelden",
+            "satz": "Wundvisite anmelden"
+          },
+          {
+            "knopf": "Fadenzug / Klammern",
+            "satz": "Fadenzug bzw. Klammerentfernung{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "POD",
+                "freiwillig": true,
+                "davor": " am ",
+                "danach": ". postoperativen Tag"
+              }
+            ]
+          },
+          {
+            "knopf": "Drainage",
+            "mehrfach": true,
+            "satz": "{d}{s} {z}",
+            "felder": [
+              {
+                "name": "d",
+                "art": "auswahl",
+                "titel": "Art",
+                "vorgabe": "Drainage",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Drainage",
+                  "Redon-Drainage",
+                  "Blake-Drainage",
+                  "Easy-Flow-Drainage",
+                  "Robinson-Drainage",
+                  "Zieldrainage",
+                  "Lasche",
+                  "Thoraxdrainage",
+                  "Magensonde",
+                  "VAC-System",
+                  "Spül-VAC"
+                ]
+              },
+              {
+                "name": "s",
+                "art": "auswahl",
+                "titel": "Seite",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  "rechts",
+                  "links",
+                  "beidseits"
+                ]
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "titel": "Vorgehen",
+                "vorgabe": "entfernen",
+                "optionen": [
+                  [
+                    "entfernen",
+                    "entfernen"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ],
+                  [
+                    "anspülen",
+                    "anspülen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Zugang / Katheter",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "mehrfachauswahl",
+                "eigeneEingabe": true,
+                "einzelsaetze": true,
+                "optionen": [
+                  "PVK entfernen",
+                  "ZVK entfernen",
+                  "ZVK wechseln",
+                  "Blasenkatheter entfernen"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Magensonde",
+            "satz": "Magensonde {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "titel": "Plan",
+                "davor": " ",
+                "vorgabe": "abklemmen und bei ausbleibender Übelkeit entfernen",
+                "optionen": [
+                  "abklemmen und bei ausbleibender Übelkeit entfernen",
+                  "belassen"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Therapie",
+        "bausteine": [
+          {
+            "knopf": "Kost",
+            "satz": "{z}{n}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Kostaufbau fortführen",
+                "optionen": [
+                  [
+                    "Aufbau fortführen",
+                    "Kostaufbau fortführen"
+                  ],
+                  [
+                    "Aufbau beginnen",
+                    "Kostaufbau beginnen"
+                  ],
+                  [
+                    "Nahrungskarenz",
+                    "Weiterhin Nahrungskarenz"
+                  ]
+                ]
+              },
+              {
+                "name": "n",
+                "art": "auswahl",
+                "titel": "Kostform",
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "Tee",
+                    "ausschließlich Tee/Wasser"
+                  ],
+                  [
+                    "flüssig",
+                    "Kost flüssig/püriert"
+                  ],
+                  [
+                    "Jo/Su/WB",
+                    "Johgurt, Suppe, Weißbrot"
+                  ],
+                  [
+                    "weich",
+                    "weiche Kost"
+                  ],
+                  [
+                    "LVK",
+                    "leichte Vollkost"
+                  ],
+                  [
+                    "VK",
+                    "Vollkost"
+                  ],
+                  [
+                    "WK",
+                    "Wunschkost"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Analgesie",
+            "satz": "Analgesie {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "anpassen",
+                "optionen": [
+                  [
+                    "anpassen",
+                    "anpassen"
+                  ],
+                  [
+                    "reduzieren",
+                    "schrittweise reduzieren"
+                  ],
+                  [
+                    "intensivieren",
+                    "intensivieren"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Antibiose",
+            "satz": "Antibiotische Therapie{m} {z}{d}",
+            "felder": [
+              {
+                "name": "m",
+                "art": "text",
+                "hinweis": "Präparat",
+                "freiwillig": true,
+                "davor": " mit ",
+                "breit": true
+              },
+              {
+                "name": "d",
+                "art": "text",
+                "hinweis": "bis",
+                "freiwillig": true,
+                "davor": " bis ",
+                "mittel": true
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "fortführen",
+                "optionen": [
+                  [
+                    "fortführen",
+                    "fortführen"
+                  ],
+                  [
+                    "auf p.o. umstellen",
+                    "auf orale Gabe umstellen"
+                  ],
+                  [
+                    "beenden",
+                    "beenden"
+                  ],
+                  [
+                    "beginnen",
+                    "beginnen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Mobi/Physio",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "mehrfachauswahl",
+                "eigeneEingabe": true,
+                "einzelsaetze": true,
+                "optionen": [
+                  "Mobilisation intensivieren",
+                  "Physiotherapie anmelden",
+                  "Atemtherapie anmelden"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "EK transfundieren",
+            "satz": "{n}Erythrozytenkonzentrat(e) transfundieren",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "Anz.",
+                "freiwillig": true,
+                "danach": " "
+              }
+            ]
+          },
+          {
+            "knopf": "Abführende Maßnahmen",
+            "satz": "Abführende Maßnahmen: {n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "mehrfachauswahl",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "Movicol",
+                    "Movicol ansetzen"
+                  ],
+                  [
+                    "Espumisan",
+                    "Espumisan ansetzen"
+                  ],
+                  [
+                    "Laxoberal",
+                    "Natriumpicosulfat (Laxoberal o.ä.) ansetzen"
+                  ],
+                  [
+                    "Klistier",
+                    "Klistier anordnen"
+                  ],
+                  [
+                    "Hebe-senk",
+                    "Hebe-Senk-Einlauf anordnen"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Diagnostik",
+        "bausteine": [
+          {
+            "knopf": "Laborkontrolle",
+            "satz": "Laborkontrolle {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "abgenommen",
+                    "abgenommen, heute sichten"
+                  ],
+                  [
+                    "heute abnehmen",
+                    "im Verlauf heute"
+                  ],
+                  "morgen früh",
+                  "übermorgen"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Sonographie",
+            "satz": "Sonographie {z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "des Abdomens",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "Abdomen",
+                    "des Abdomens"
+                  ],
+                  [
+                    "Leiste re.",
+                    "der Leiste rechts"
+                  ],
+                  [
+                    "Leiste li.",
+                    "der Leiste links"
+                  ],
+                  [
+                    "Wundgebiet",
+                    "des Wundgebietes"
+                  ],
+                  [
+                    "Hämatom",
+                    "zum Hämatomausschluss"
+                  ],
+                  [
+                    "Serom",
+                    "zur Seromkontrolle"
+                  ],
+                  [
+                    "Abszess",
+                    "zum Abszessausschluss"
+                  ],
+                  [
+                    "Nieren",
+                    "der Nieren und ableitenden Harnwege"
+                  ],
+                  [
+                    "Gallenwege",
+                    "der Gallenblase und Gallenwege"
+                  ],
+                  [
+                    "Beinvenen",
+                    "der Beinvenen zum TVT-Ausschluss"
+                  ],
+                  [
+                    "Restharn",
+                    "zur Restharnbestimmung"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "CT anmelden",
+            "satz": "CT {r}{k} anmelden",
+            "felder": [
+              {
+                "name": "r",
+                "art": "auswahl",
+                "titel": "Region",
+                "vorgabe": "Abdomen",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Abdomen",
+                  "Abdomen und Becken",
+                  "Thorax",
+                  "Thorax und Abdomen",
+                  "Hals",
+                  "Schädel"
+                ]
+              },
+              {
+                "name": "k",
+                "art": "auswahl",
+                "titel": "Kontrast",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  "nativ",
+                  "mit Kontrastmittel",
+                  "mit KM i.v. und oral",
+                  "in venöser Phase",
+                  "in arterieller Phase"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Weitere Diagnostik",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "mehrfachauswahl",
+                "eigeneEingabe": true,
+                "einzelsaetze": true,
+                "optionen": [
+                  "Röntgen-Thorax anmelden",
+                  "Wundabstrich zur mikrobiologischen Diagnostik",
+                  "Blutkulturen abnehmen",
+                  "Urin-Status abnehmen",
+                  "Urinkultur abnehmen",
+                  "EKG schreiben",
+                  "Histologischen Befund abwarten",
+                  "Röntgen-Abdomen anmelden"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Organisation / Entlassung",
+        "bausteine": [
+          {
+            "knopf": "Procedere klären",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "RS Oberarzt",
+                    "Rücksprache mit dem Oberarzt/der Oberärztin"
+                  ],
+                  [
+                    "Kurvenvisite",
+                    "Entscheidung im Rahmen der Kurvenvisite"
+                  ],
+                  [
+                    "Tumorkonferenz",
+                    "Vorstellung in der interdisziplinären Tumorkonferenz"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Konsil anmelden",
+            "satz": "Konsil{z} anmelden",
+            "felder": [
+              {
+                "name": "z",
+                "art": "text",
+                "hinweis": "Fachrichtung",
+                "freiwillig": true,
+                "davor": " ",
+                "breit": true
+              }
+            ]
+          },
+          {
+            "knopf": "Organisation Weiterversorgung",
+            "satz": "{z}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "mehrfachauswahl",
+                "eigeneEingabe": true,
+                "einzelsaetze": true,
+                "optionen": [
+                  "Sozialdienst einschalten",
+                  "Anschlussheilbehandlung beantragen",
+                  "Häusliche Versorgung klären",
+                  "Ambulanten Pflegedienst organisieren",
+                  "Gespräch mit den Angehörigen"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Entlassung",
+            "satz": "Entlassung {z}{d}",
+            "felder": [
+              {
+                "name": "d",
+                "art": "text",
+                "davor": " ",
+                "freiwillig": true,
+                "mittel": true,
+                "hinweis": "Datum"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "heute",
+                "optionen": [
+                  "bahnen",
+                  "heute",
+                  "morgen",
+                  "geplant für"
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Wiedervorstellung",
+            "satz": "{z}{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "zahl",
+                "hinweis": "Wo",
+                "freiwillig": true,
+                "davor": " in ",
+                "danach": " Wochen"
+              },
+              {
+                "name": "z",
+                "art": "auswahl",
+                "vorgabe": "Wiedervorstellung in der chirurgischen Ambulanz",
+                "eigeneEingabe": true,
+                "optionen": [
+                  [
+                    "chir. Ambulanz",
+                    "Wiedervorstellung in der chirurgischen Ambulanz"
+                  ],
+                  [
+                    "Hausarzt",
+                    "Vorstellung beim Hausarzt zur Wundkontrolle"
+                  ],
+                  [
+                    "Wundsprechstunde",
+                    "Vorstellung in der Wundsprechstunde"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Verlegung",
+            "satz": "Verlegung{z} veranlassen",
+            "felder": [
+              {
+                "name": "z",
+                "art": "text",
+                "hinweis": "Station",
+                "freiwillig": true,
+                "davor": " auf ",
+                "breit": true
+              }
+            ]
+          },
+          {
+            "knopf": "Ambulante Wundversorgung",
+            "satz": "{n}",
+            "felder": [
+              {
+                "name": "n",
+                "art": "auswahl",
+                "optionen": [
+                  [
+                    "Wunddienst organisieren",
+                    "Ambulanten Wunddienst organisieren"
+                  ],
+                  [
+                    "Wunddienst steht",
+                    "Ambulante Wundbehandlung über Wunddienst sichergestellt"
+                  ],
+                  [
+                    "RS Hausarzt",
+                    "Rücksprache mit dem Hausarzt zur Übernahme der Wundversorgung"
+                  ],
+                  [
+                    "Hausarzt übernimmt",
+                    "Hausarzt übernimmt die ambulante Wundversorgung"
+                  ],
+                  [
+                    "Pflegedienst übernimmt",
+                    "Ambulanter Pflegedienst übernimmt die weitere Wundversorgung"
+                  ],
+                  [
+                    "Pflegeheim übernimmt",
+                    "Pflegeheim übernimmt die weitere Wundversorgung"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "M": {
+    "name": "Fremdmaterial",
+    "gruppen": [
+      {
+        "gruppe": "",
+        "bausteine": [
+          {
+            "knopf": "Kein Fremdmaterial",
+            "alleinstehend": true,
+            "satz": "Kein einliegendes Fremdmaterial"
+          }
+        ]
+      },
+      {
+        "gruppe": "Gefäßzugänge",
+        "bausteine": [
+          {
+            "knopf": "PVK",
+            "mehrfach": true,
+            "satz": "PVK{loc}{ind}{plan}",
+            "felder": [
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lokalisation",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Handrücken re.",
+                  "Handrücken li.",
+                  "Unterarm re.",
+                  "Unterarm li.",
+                  "Ellenbeuge re.",
+                  "Ellenbeuge li.",
+                  "Oberarm re.",
+                  "Oberarm li.",
+                  "Fußrücken re.",
+                  "Fußrücken li."
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "freiwillig": true,
+                "davor": " für ",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Antibiose",
+                  "Schmerztherapie",
+                  "Volumentherapie",
+                  "Medikamentengabe",
+                  "Kontrastmittelgabe"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "ZVK",
+            "satz": "ZVK{loc}{ind}{z}{n}{plan}",
+            "mehrfach": true,
+            "felder": [
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lokalisation",
+                "davor": " (",
+                "danach": ")",
+                "freiwillig": true,
+                "eigeneEingabe": true,
+                "optionen": [
+                  "V. jugularis int. re.",
+                  "V. jugularis int. li.",
+                  "V. subclavia re.",
+                  "V. subclavia li.",
+                  "V. femoralis re.",
+                  "V. femoralis li."
+                ]
+              },
+              {
+                "name": "n",
+                "art": "auswahl",
+                "titel": "Zustand",
+                "davor": ", ",
+                "danach": " ",
+                "freiwillig": true,
+                "optionen": [
+                  "reizlos",
+                  "Einstichstelle gerötet"
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "davor": " für ",
+                "freiwillig": true,
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Antibiose",
+                  "Parenterale Ernährung",
+                  "Volumentherapie",
+                  "Medikamentengabe",
+                  "Blutentnahme"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "davor": ", ",
+                "freiwillig": true,
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              },
+              {
+                "name": "z",
+                "art": "zahl",
+                "davor": ", ",
+                "danach": ". Tag einliegend",
+                "freiwillig": true,
+                "hinweis": "Tag"
+              }
+            ]
+          },
+          {
+            "knopf": "Port",
+            "mehrfach": true,
+            "satz": "Portkatheter{loc}{ind}{plan}",
+            "felder": [
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lokalisation",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Thorax re.",
+                  "Thorax li.",
+                  "Oberarm re.",
+                  "Oberarm li."
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "freiwillig": true,
+                "davor": " für ",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Chemotherapie",
+                  "Antibiose",
+                  "Parenterale Ernährung",
+                  "Blutentnahme"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Midline / PICC",
+            "mehrfach": true,
+            "satz": "Midline-Katheter{loc}{ind}{plan}",
+            "felder": [
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lokalisation",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Oberarm re.",
+                  "Oberarm li."
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "freiwillig": true,
+                "davor": " für ",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Antibiose",
+                  "Parenterale Ernährung",
+                  "Medikamentengabe",
+                  "Blutentnahme"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Drainagen",
+        "bausteine": [
+          {
+            "knopf": "Drainage",
+            "mehrfach": true,
+            "satz": "{art}{loc}{ind}{plan}",
+            "felder": [
+              {
+                "name": "art",
+                "art": "auswahl",
+                "titel": "Art",
+                "vorgabe": "Drainage",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Drainage",
+                  "Redon-Drainage",
+                  "Blake-Drainage",
+                  "Easy-Flow-Drainage",
+                  "Robinson-Drainage",
+                  "Zieldrainage",
+                  "Lasche",
+                  "Thoraxdrainage",
+                  "T-Drainage"
+                ]
+              },
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lokalisation",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Oberbauch re.",
+                  "Oberbauch li.",
+                  "Unterbauch re.",
+                  "Unterbauch li.",
+                  "Mittelbauch",
+                  "subhepatisch",
+                  "subphrenisch re.",
+                  "subphrenisch li.",
+                  "Milzloge",
+                  "Douglas-Raum",
+                  "Wundgebiet",
+                  "Leiste re.",
+                  "Leiste li.",
+                  "Axilla re.",
+                  "Axilla li.",
+                  "Bülau re.",
+                  "Bülau li.",
+                  "Ductus choledochus"
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "freiwillig": true,
+                "davor": " für ",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Ableitung von Wundsekret",
+                  "Sekretkontrolle",
+                  "Blutungskontrolle",
+                  "Insuffizienzkontrolle",
+                  "Abszessdrainage",
+                  "Galleableitung",
+                  "Luftableitung",
+                  "Pleuraerguss"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "VAC / Spül-VAC",
+            "mehrfach": true,
+            "satz": "{art}{loc}{ind}{plan}",
+            "felder": [
+              {
+                "name": "art",
+                "art": "auswahl",
+                "titel": "Art",
+                "vorgabe": "VAC-System",
+                "optionen": [
+                  "VAC-System",
+                  "Spül-VAC",
+                  "Endo-SPONGE"
+                ]
+              },
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lokalisation",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Wundgebiet",
+                  "Oberbauch",
+                  "Unterbauch",
+                  "Laparostoma",
+                  "Rektum",
+                  "Anastomose",
+                  "präsakral",
+                  "Leiste re.",
+                  "Leiste li."
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "freiwillig": true,
+                "davor": " für ",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Wundkonditionierung",
+                  "Ableitung von Wundsekret",
+                  "Infektsanierung",
+                  "Instillationstherapie",
+                  "Anastomoseninsuffizienz",
+                  "Vorbereitung Sekundärverschluss"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gruppe": "Sonden / Katheter",
+        "bausteine": [
+          {
+            "knopf": "Blasenkatheter",
+            "mehrfach": true,
+            "satz": "Blasenkatheter{loc}{ind}{plan}",
+            "felder": [
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lage",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "optionen": [
+                  "transurethral",
+                  "suprapubisch"
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "freiwillig": true,
+                "davor": " für ",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Harnableitung",
+                  "Bilanzierung",
+                  "Harnverhalt"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Magensonde / PEG",
+            "mehrfach": true,
+            "satz": "{art}{loc}{ind}{plan}",
+            "felder": [
+              {
+                "name": "art",
+                "art": "auswahl",
+                "titel": "Art",
+                "vorgabe": "Magensonde",
+                "optionen": [
+                  "Magensonde",
+                  "PEG-Sonde"
+                ]
+              },
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lage",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "nasogastral re.",
+                  "nasogastral li.",
+                  "oral",
+                  "Oberbauch li."
+                ]
+              },
+              {
+                "name": "ind",
+                "art": "mehrfachauswahl",
+                "titel": "Indikation",
+                "freiwillig": true,
+                "davor": " für ",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "Magenentlastung",
+                  "Ableitung von Magensekret",
+                  "Enterale Ernährung",
+                  "Medikamentengabe"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Schmerzkatheter / PDK",
+            "mehrfach": true,
+            "satz": "{art}{loc} für Schmerztherapie{plan}",
+            "felder": [
+              {
+                "name": "art",
+                "art": "auswahl",
+                "titel": "Art",
+                "vorgabe": "Periduralkatheter",
+                "optionen": [
+                  "Periduralkatheter",
+                  "Regionaler Schmerzkatheter"
+                ]
+              },
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Lage",
+                "freiwillig": true,
+                "davor": " (",
+                "danach": ")",
+                "eigeneEingabe": true,
+                "optionen": [
+                  "thorakal",
+                  "lumbal",
+                  "BWK 7/8",
+                  "BWK 9/10",
+                  "LWK 2/3",
+                  "Wundgebiet",
+                  "Leiste re.",
+                  "Leiste li."
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "Ureterschiene (DJ)",
+            "mehrfach": true,
+            "satz": "Ureterschiene (DJ){loc} für Harnableitung{plan}",
+            "felder": [
+              {
+                "name": "loc",
+                "art": "auswahl",
+                "titel": "Seite",
+                "freiwillig": true,
+                "davor": " ",
+                "optionen": [
+                  "rechts",
+                  "links",
+                  "beidseits"
+                ]
+              },
+              {
+                "name": "plan",
+                "art": "auswahl",
+                "titel": "Planung",
+                "freiwillig": true,
+                "davor": ", ",
+                "optionen": [
+                  [
+                    "heute entfernen",
+                    "wird heute entfernt"
+                  ],
+                  [
+                    "morgen entfernen",
+                    "wird morgen entfernt"
+                  ],
+                  [
+                    "wechseln",
+                    "wird gewechselt"
+                  ],
+                  [
+                    "belassen",
+                    "vorerst belassen"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+};
 /*@@BAUSTEINE_END@@*/
 
 
@@ -3009,6 +5173,4 @@ window.addEventListener("beforeunload", e => {
   aktualisiereTeilnehmerKnopf();
   zeichne(false);
 })();
-</script>
-</body>
-</html>
+</script></body></html>
