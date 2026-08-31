@@ -32,7 +32,7 @@ Struktur nach **SOAP** plus einliegendes Fremdmaterial. Umschaltbar zwischen **F
 
 **Online** — [jeskokaiser.de/visitendoku](https://jeskokaiser.de/visitendoku) aufrufen.
 
-**Offline** — auf der Seite oben rechts **⤓ Offline-Kopie** klicken. Die Datei landet als `visitendokumentation.html` im Download-Ordner und funktioniert per Doppelklick ohne Internet. Alternativ `visitendoku.html` aus diesem Repository herunterladen.
+**Offline** — auf der Seite oben rechts **⤓ HTML-speichern** klicken. Die Datei landet als `visitendokumentation.html` im Download-Ordner und funktioniert per Doppelklick ohne Internet. Alternativ `visitendoku.html` aus diesem Repository herunterladen.
 
 **Selbst hosten** — `visitendoku.html` auf einen beliebigen Webspace legen. Es gibt nichts zu bauen und nichts zu installieren; eine einzelne Datei von 50 kB genügt.
 
