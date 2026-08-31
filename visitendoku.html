@@ -381,10 +381,10 @@ footer{
   <div class="fbar">
     <span class="ttl">Vorschau</span>
     <span class="note" id="hint">– noch keine Bausteine ausgewählt –</span>
-    <span class="warn" id="edited" hidden="">manuell angepasst · nächster Baustein-Klick übernimmt wieder</span>
+    <span class="warn" id="edited" hidden="">manuell angepasst · bleibt bei Baustein-Klicks erhalten</span>
     <span class="warn" id="gaps" hidden=""></span>
     <span class="sp"></span>
-    <button class="btn" id="resync" hidden="">↻ Neu aufbauen</button>
+    <button class="btn" id="resync" hidden="" title="Manuelle Anpassungen verwerfen und die Vorschau neu aus den Bausteinen aufbauen">↻ Neu aufbauen</button>
     <button class="btn" id="copy">In Zwischenablage</button>
   </div>
   <div id="out" contenteditable="true"></div>
@@ -3846,7 +3846,8 @@ const freitext = { S:"", O:"", A:"", P:"", M:"" };
 let   reiter   = "S";          // welcher Reiter gerade offen ist
 let   fliesstext = true;       // true = Fließtext, false = Stichpunkte
 let   anrede   = "Patient";    // Schalter M/W
-let   handBearbeitet = false;  // Vorschau manuell getippt (bis nächster Baustein-Klick)
+let   handBearbeitet = false;  // Vorschau enthält manuelle Anpassungen
+let   basisText      = "";     // Automatiktext, auf dem die Handfassung entstand
 let   teilnehmerArt  = "namen"; // "namen" | "oa" | "ca" – überlebt Zurücksetzen
 let   teilnehmerText = "";      // Freitext – überlebt Zurücksetzen, nicht das Neuladen
 
@@ -4372,10 +4373,149 @@ function alsAnzeige(t){
 }
 
 /* Was tatsächlich kopiert wird: der von Hand bearbeitete Text, falls die
-   Vorschau gerade manuell angepasst ist – sonst der automatische Aufbau.
-   Baustein-Klicks bauen die Vorschau wieder automatisch auf.               */
+   Vorschau gerade manuell angepasst ist – sonst der automatische Aufbau.   */
 const aktuellerText = () =>
   handBearbeitet ? $("#out").innerText.replace(/\n+$/, "") : ganzerText();
+
+
+/* ════════════ HANDBEARBEITUNG UND BAUSTEIN-KLICKS ZUGLEICH ══════════════
+   Die Vorschau darf von Hand verfeinert werden, ohne dass der nächste
+   Baustein-Klick die Tipparbeit verwirft. Dazu wird bei jedem Neuaufbau
+   ein Dreiwege-Abgleich gerechnet:
+
+     basisText   – der Automatiktext, auf dem die Handfassung entstand
+     Handfassung – was gerade in der Vorschau steht
+     neuer Text  – der frisch aus den Bausteinen gebaute Text
+
+   Was nur die Hand geändert hat, bleibt stehen – auch mitten in einem
+   Baustein-Satz oder zwischen zwei Sätzen. Was nur die Bausteine geändert
+   haben, wird eingewoben. Ändern beide dieselbe Stelle, gewinnt der
+   Baustein-Klick, sonst wirkte der Klick tot. Nur „Zurücksetzen" und
+   „Neu aufbauen" räumen die Handfassung weiterhin ausdrücklich ab.        */
+
+/* Zerlegt Text in Wörter, Leerraum, Zeilenumbrüche und Satzzeichen am
+   Wortende – die Einheiten, in denen verglichen wird. Feiner als ganze
+   Zeilen, damit eine Wortkorrektur nicht den Rest der Zeile "besetzt".
+   Die Satzzeichen einzeln zu führen lohnt sich doppelt: eine Ergänzung
+   vor dem Satzpunkt („… NRS 3/10, rückläufig.") überlebt so auch dann,
+   wenn derselbe Satz gerade einen neuen Wert aus einem Klick bekommt,
+   und der Wechsel Fließtext ↔ Stichpunkte (dort ohne Satzpunkte) reißt
+   keine Handänderungen am Satzende mehr mit.                              */
+const inStuecke = t => (t.match(/\n|[^\S\n]+|\S+/g) || []).flatMap(s => {
+  if(/\s/.test(s[0])) return [s];
+  const m = s.match(/^([^]*?)([.,;:!?]+)$/);
+  return m ? (m[1] ? [m[1], ...m[2]] : [...m[2]]) : [s];
+});
+
+/* Änderungsblöcke zwischen zwei Stück-Listen: { b0,b1, s0,s1 } bedeutet,
+   basis[b0..b1) wurde durch fassung[s0..s1) ersetzt (b0 = b1: Einfügung).
+   Grundlage ist die längste gemeinsame Teilfolge über den ganzen Text –
+   bewusst ohne Abkürzungen, denn Handfassung und Automatiktext werden
+   beide gegen dieselbe Basis verglichen und nur ein identisches Vorgehen
+   verankert gleiche Einfügestellen auch an gleichen Positionen.            */
+function aenderungsbloecke(basis, fassung){
+  const n = basis.length, m = fassung.length;
+  if(!n && !m) return [];
+  /* Notbremse bei extrem großen Texten: alles als ein Block. */
+  if(n * m > 4e6) return [{ b0:0, b1:n, s0:0, s1:m }];
+
+  const breite = m + 1;
+  const lgt = new Int32Array((n + 1) * breite);   // Teilfolgenlänge ab (i,j)
+  for(let i = n - 1; i >= 0; i--)
+    for(let j = m - 1; j >= 0; j--)
+      lgt[i*breite + j] = basis[i] === fassung[j]
+        ? lgt[(i+1)*breite + j+1] + 1
+        : Math.max(lgt[(i+1)*breite + j], lgt[i*breite + j+1]);
+
+  const bloecke = [];
+  let i = 0, j = 0, bi = 0, bj = 0;               // bi/bj: Beginn des offenen Blocks
+  const abschliessen = () => {
+    if(i > bi || j > bj) bloecke.push({ b0:bi, b1:i, s0:bj, s1:j });
+  };
+  while(i < n && j < m){
+    if(basis[i] === fassung[j]){ abschliessen(); i++; j++; bi = i; bj = j; }
+    else if(lgt[(i+1)*breite + j] >= lgt[i*breite + j+1]) i++;
+    else j++;
+  }
+  i = n; j = m;
+  abschliessen();
+  return bloecke;
+}
+
+/* Der eigentliche Abgleich: Handfassung und neuer Automatiktext werden
+   unabhängig gegen die gemeinsame Basis verglichen, dann werden beide
+   Änderungssätze der Reihe nach eingewoben.                                */
+function verwebe(basisT, handT, autoT){
+  const basis = inStuecke(basisT), hand = inStuecke(handT), auto = inStuecke(autoT);
+  const H = aenderungsbloecke(basis, hand);
+  const A = aenderungsbloecke(basis, auto);
+  const out = [];
+  let i = 0, h = 0, a = 0;
+
+  /* Bereich [von..bis) der Basis so ausgeben, wie eine Seite ihn sieht. */
+  const uebernehme = (seite, bloecke, von, bis) => {
+    let k = von;
+    for(const c of bloecke){
+      while(k < c.b0) out.push(basis[k++]);
+      for(let s = c.s0; s < c.s1; s++) out.push(seite[s]);
+      k = c.b1;
+    }
+    while(k < bis) out.push(basis[k++]);
+  };
+
+  while(h < H.length || a < A.length){
+    const start = Math.min(h < H.length ? H[h].b0 : Infinity,
+                           a < A.length ? A[a].b0 : Infinity);
+    while(i < start) out.push(basis[i++]);
+
+    /* Reine Einfügungen an dieser Stelle: beide behalten, Automatik zuerst –
+       so landet ein neuer Baustein-Satz dort, wo man ihn erwartet, und die
+       eigene Ergänzung bleibt dahinter stehen. Wortgleiche Doppel (der
+       Satz wurde erst getippt, dann geklickt) erscheinen nur einmal.       */
+    const eh = h < H.length && H[h].b0 === start && H[h].b1 === start;
+    const ea = a < A.length && A[a].b0 === start && A[a].b1 === start;
+    if(eh || ea){
+      const teilA = ea ? auto.slice(A[a].s0, A[a].s1).join("") : null;
+      if(ea){ out.push(teilA); a++; }
+      if(eh){
+        const teilH = hand.slice(H[h].s0, H[h].s1).join("");
+        if(teilH !== teilA) out.push(teilH);
+        h++;
+      }
+      continue;
+    }
+
+    /* Zusammenhängender Bereich, in dem mindestens eine Seite Basistext
+       ersetzt oder löscht – alles, was hineinragt, gehört zur Gruppe.      */
+    let ende = start;
+    const gh = [], ga = [];
+    if(h < H.length && H[h].b0 === start){ ende = Math.max(ende, H[h].b1); gh.push(H[h++]); }
+    if(a < A.length && A[a].b0 === start){ ende = Math.max(ende, A[a].b1); ga.push(A[a++]); }
+    let gewachsen = true;
+    while(gewachsen){
+      gewachsen = false;
+      while(h < H.length && H[h].b0 < ende){ ende = Math.max(ende, H[h].b1); gh.push(H[h++]); gewachsen = true; }
+      while(a < A.length && A[a].b0 < ende){ ende = Math.max(ende, A[a].b1); ga.push(A[a++]); gewachsen = true; }
+    }
+    if(ga.length && gh.length) uebernehme(auto, ga, start, ende);  // Konflikt: der Klick gewinnt
+    else if(gh.length)         uebernehme(hand, gh, start, ende);
+    else                       uebernehme(auto, ga, start, ende);
+    i = ende;
+  }
+  while(i < basis.length) out.push(basis[i++]);
+  return out.join("");
+}
+
+/* Handfassung und neuen Automatiktext zusammenführen. Kleine Nähte werden
+   geglättet: Leerraum vor Zeilenumbrüchen und doppelte Leerzeichen mitten
+   in der Zeile können am Übergang zweier Änderungen entstehen.             */
+function fuegeZusammen(alt, handF, neu){
+  if(handF === alt) return neu;
+  if(neu === alt)   return handF;
+  return verwebe(alt, handF, neu)
+    .replace(/[^\S\n]+(?=\n)/g, "")
+    .replace(/([^\s]) {2,}(?=[^\s])/g, "$1 ");
+}
 
 const nichtsGewaehlt = () => !REITER.some(r => saetzeImReiter(r).length);
 
@@ -4394,24 +4534,40 @@ function setzeHandBearbeitung(an){
   $("#resync").hidden = !an;
 }
 
-/* Baut die Vorschau aus den Bausteinen neu auf. Manuelle Tipparbeit in der
-   Vorschau wird dabei bewusst ersetzt – so bleiben Baustein-Klicks aktiv.  */
+/* Baut die Vorschau aus den Bausteinen neu auf. Eine von Hand angepasste
+   Vorschau wird dabei nicht verworfen: der Dreiwege-Abgleich webt den
+   neuen Automatiktext in die Handfassung ein. Verschwinden dadurch alle
+   Abweichungen, gilt die Vorschau wieder als unbearbeitet.                 */
 function aktualisiere(){
-  if(handBearbeitet) setzeHandBearbeitung(false);
-  $("#hint").hidden = !nichtsGewaehlt();
-  $("#out").innerHTML = alsAnzeige(ganzerText());
+  const neu = ganzerText();
+  if(handBearbeitet){
+    /* Geschützte Leerzeichen, die beim Tippen im Feld entstehen können,
+       werden wie normale behandelt – sonst entstünden Schein-Änderungen. */
+    const handF = $("#out").innerText.replace(/\u00A0/g, " ").replace(/\n+$/, "");
+    const vereint = fuegeZusammen(basisText, handF, neu);
+    if(vereint === neu) setzeHandBearbeitung(false);
+    $("#out").innerHTML = alsAnzeige(vereint);
+  } else {
+    $("#out").innerHTML = alsAnzeige(neu);
+  }
+  basisText = neu;
+  $("#hint").hidden = !nichtsGewaehlt() || handBearbeitet;
   zaehleLuecken();
 }
 
-/* Tippen in der Vorschau erlaubt Feinschliff vor dem Kopieren. Der nächste
-   Baustein-Klick (oder „Neu aufbauen") übernimmt wieder den Automatiktext. */
+/* Tippen in der Vorschau erlaubt Feinschliff vor dem Kopieren. Baustein-
+   Klicks arbeiten ihre Änderungen anschließend in die Handfassung ein;
+   erst „Neu aufbauen" oder „Zurücksetzen" verwerfen sie.                   */
 $("#out").addEventListener("input", () => {
   if(!handBearbeitet) setzeHandBearbeitung(true);
   $("#hint").hidden = true;
   zaehleLuecken();     // kein Neuaufbau des Feldes – der Cursor bleibt stehen
 });
 
+/* „Neu aufbauen": manuelle Anpassungen ausdrücklich verwerfen und die
+   Vorschau wieder rein aus den Bausteinen erzeugen.                        */
 function wiederAufbauen(){
+  setzeHandBearbeitung(false);
   aktualisiere();
 }
 $("#resync").addEventListener("click", wiederAufbauen);
