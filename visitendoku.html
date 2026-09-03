@@ -2183,6 +2183,10 @@ const BAUSTEINE = {
           {
             "knopf": "Keine neuen Aspekte",
             "satz": "Keine neuen Aspekte"
+          },
+          {
+            "knopf": "Präop",
+            "satz": "Präoperative Visite, {P} hat keine Fragen."
           }
         ]
       },
@@ -3094,6 +3098,37 @@ const BAUSTEINE = {
                   [
                     "Pflegeheim übernimmt",
                     "Pflegeheim übernimmt die weitere Wundversorgung"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "knopf": "OP heute (Präop)",
+            "satz": "OP erfolgt heute."
+          },
+          {
+            "knopf": "Entlassgespräch",
+            "satz": "{z}Entlassgespräch ist erfolgt. {n}",
+            "felder": [
+              {
+                "name": "z",
+                "art": "auswahl",
+                "danach": " ",
+                "freiwillig": true,
+                "optionen": [
+                  "Ausführliches"
+                ]
+              },
+              {
+                "name": "n",
+                "art": "auswahl",
+                "freiwillig": true,
+                "vorgabe": "{P} hat keine weiteren Fragen",
+                "optionen": [
+                  [
+                    "Keine Fragen",
+                    "{P} hat keine weiteren Fragen"
                   ]
                 ]
               }
